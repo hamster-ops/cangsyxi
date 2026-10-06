@@ -1,0 +1,2982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🐎 套马大亨 · 万物皆可跑</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b1410;
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:#e8f2ec;-webkit-tap-highlight-color:transparent;user-select:none}
+  #game{display:block;position:absolute;inset:0;touch-action:none;cursor:crosshair}
+  #hud{position:absolute;top:0;left:0;right:0;padding:12px 14px;display:flex;
+       justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:10;gap:10px}
+  .hud-left{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:rgba(8,20,14,.72);border:1px solid rgba(255,255,255,.12);
+        padding:7px 16px;border-radius:999px;font-weight:800;font-size:15px;
+        backdrop-filter:blur(8px);font-variant-numeric:tabular-nums;
+        box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .pill b{color:#ffd93d}
+  .hud-right{pointer-events:auto;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .btn{background:linear-gradient(135deg,rgba(255,217,61,.16),rgba(255,159,67,.08));
+       border:1px solid rgba(255,217,61,.4);color:#ffd93d;padding:9px 18px;
+       border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;
+       cursor:pointer;backdrop-filter:blur(8px);transition:.15s}
+  .btn:hover{background:rgba(255,217,61,.24);transform:translateY(-1px)}
+  .btn:active{transform:scale(.96)}
+  .btn.small{padding:7px 12px;font-size:12.5px;border-radius:9px}
+  .btn.ghost{border-color:rgba(255,255,255,.16);color:#c8ddd2;background:rgba(255,255,255,.05)}
+  .btn.ghost:hover{background:rgba(255,255,255,.12)}
+  .btn.red{border-color:rgba(255,107,107,.4);color:#ff8787;background:rgba(255,107,107,.08)}
+  .btn.red:hover{background:rgba(255,107,107,.18)}
+  .btn.blue{border-color:rgba(99,179,255,.4);color:#8ec9ff;background:rgba(99,179,255,.08)}
+  .btn.blue:hover{background:rgba(99,179,255,.18)}
+  .btn.pink{border-color:rgba(255,107,203,.4);color:#ff8fd6;background:rgba(255,107,203,.08)}
+  .btn.pink:hover{background:rgba(255,107,203,.18)}
+  .btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.8)}
+  .btn:disabled:hover{transform:none;background:linear-gradient(135deg,rgba(255,217,61,.16),rgba(255,159,67,.08))}
+  #tip{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+       background:rgba(8,20,14,.72);border:1px solid rgba(255,255,255,.1);
+       padding:9px 20px;border-radius:999px;font-size:13px;font-weight:700;
+       color:#9fb8aa;backdrop-filter:blur(8px);pointer-events:none;z-index:10;white-space:nowrap}
+  #toast{position:absolute;left:50%;top:22%;transform:translateX(-50%) scale(.9);
+         background:rgba(10,25,18,.94);border:2px solid rgba(255,217,61,.5);
+         padding:14px 30px;border-radius:16px;font-weight:800;font-size:17px;
+         color:#ffd93d;opacity:0;transition:.25s;pointer-events:none;z-index:40;
+         box-shadow:0 16px 44px rgba(0,0,0,.6);text-align:center;max-width:88vw}
+  #toast.show{opacity:1;transform:translateX(-50%) scale(1)}
+  .overlay{position:absolute;inset:0;background:rgba(3,10,7,.82);
+           backdrop-filter:blur(6px);z-index:50;display:flex;
+           align-items:center;justify-content:center;padding:16px}
+  .overlay.hidden{display:none}
+  .card{background:linear-gradient(160deg,#12241b,#0a1712);
+        border:1px solid rgba(255,255,255,.1);border-radius:20px;
+        box-shadow:0 30px 80px rgba(0,0,0,.7);width:100%;max-width:1060px;
+        max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+  .card-head{padding:16px 20px;display:flex;justify-content:space-between;
+             align-items:center;border-bottom:1px solid rgba(255,255,255,.08);gap:12px}
+  .card-title{font-size:18px;font-weight:900;letter-spacing:.5px}
+  .card-title span{color:#ffd93d}
+  .card-body{padding:16px 20px;overflow-y:auto;flex:1}
+  .card-body::-webkit-scrollbar{width:8px}
+  .card-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+  .hcard{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+         border-radius:15px;padding:13px;display:flex;flex-direction:column;gap:9px;transition:.18s}
+  .hcard:hover{border-color:rgba(255,217,61,.3);background:rgba(255,255,255,.06)}
+  .hcard-top{display:flex;gap:10px;align-items:center}
+  .hcard-top canvas{width:104px;height:72px;flex-shrink:0;border-radius:10px;background:rgba(0,0,0,.28)}
+  .hname{font-size:15px;font-weight:900;display:flex;align-items:center;gap:6px;
+         margin-bottom:5px;flex-wrap:wrap}
+  .rtag{font-size:10.5px;font-weight:900;padding:1px 8px;border-radius:999px;
+        background:rgba(255,217,61,.14);color:#ffd93d;border:1px solid rgba(255,217,61,.3)}
+  .atag{font-size:10.5px;font-weight:900;padding:1px 8px;border-radius:999px;
+        background:rgba(99,230,190,.14);color:#63e6be;border:1px solid rgba(99,230,190,.3)}
+  .atag.peak{background:rgba(255,217,61,.2);color:#ffd93d;border-color:rgba(255,217,61,.5)}
+  .atag.old{background:rgba(255,107,107,.14);color:#ff8787;border-color:rgba(255,107,107,.35)}
+  .ktag{font-size:10.5px;font-weight:900;padding:1px 8px;border-radius:999px;
+        background:rgba(77,107,254,.2);color:#8fa8ff;border:1px solid rgba(77,107,254,.5)}
+  .gtag{font-size:10.5px;font-weight:900;padding:1px 8px;border-radius:999px}
+  .gtag.male{background:rgba(77,171,247,.16);color:#74c0fc;border:1px solid rgba(77,171,247,.35)}
+  .gtag.female{background:rgba(255,107,203,.16);color:#ff8fd6;border:1px solid rgba(255,107,203,.35)}
+  .gtag.gen{background:rgba(177,151,252,.16);color:#c0a8ff;border:1px solid rgba(177,151,252,.35)}
+  .gene{font-size:11px;color:#8fa89a;font-weight:700;line-height:1.65}
+  .gene b{color:#d5e6dd}
+  .srow{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:#8fa89a}
+  .srow .lb{width:38px;flex-shrink:0}
+  .sbar{flex:1;height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+  .sfill{display:block;height:100%;border-radius:999px;transition:width .4s}
+  .sval{width:30px;text-align:right;color:#d5e6dd;font-variant-numeric:tabular-nums}
+  .acts{display:flex;gap:7px}
+  .acts button{flex:1}
+  .empty{text-align:center;padding:56px 20px;color:#6f8579;font-weight:700;
+         font-size:14px;line-height:1.9;grid-column:1/-1}
+  .empty .big{font-size:46px;margin-bottom:8px}
+  #capUI{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);
+         z-index:35;pointer-events:none;width:min(460px,86vw)}
+  #capUI.hidden{display:none}
+  .capbox{background:rgba(8,20,14,.9);border:2px solid rgba(255,217,61,.55);
+          border-radius:18px;padding:16px 20px;box-shadow:0 20px 60px rgba(0,0,0,.7);text-align:center}
+  .capbox .t{font-weight:900;font-size:16px;color:#ffd93d;margin-bottom:12px}
+  .capbar{height:20px;border-radius:999px;background:rgba(255,255,255,.09);
+          overflow:hidden;border:1px solid rgba(255,255,255,.14)}
+  .capfill{height:100%;width:0%;border-radius:999px;
+           background:linear-gradient(90deg,#ffd93d,#ff6b6b);transition:width .06s linear}
+  .capbox .h{font-size:12.5px;color:#8fa89a;font-weight:700;margin-top:10px}
+  .result{text-align:center;padding:8px 10px 18px}
+  .result .big{font-size:30px;font-weight:900;margin-bottom:10px}
+  .result .sub{font-size:15px;font-weight:700;color:#9fb8aa;margin-bottom:18px}
+  .plist{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+  .prow{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);
+        border-radius:11px;padding:9px 14px;font-weight:800;font-size:14px}
+  .prow.me{background:rgba(255,217,61,.12);border:1px solid rgba(255,217,61,.35)}
+  .prow .place{width:26px;text-align:center;font-size:16px}
+  .prow .pn{flex:1;text-align:left}
+  .prow .pt{font-variant-numeric:tabular-nums;color:#9fb8aa;font-size:12.5px}
+
+  .breed-slots{display:flex;gap:12px;align-items:stretch;margin-bottom:14px}
+  .bslot{flex:1;background:rgba(255,255,255,.04);border:2px dashed rgba(255,255,255,.14);
+         border-radius:14px;padding:14px;min-height:86px;display:flex;
+         flex-direction:column;justify-content:center;transition:.18s}
+  .bslot.filled{border-style:solid;border-color:rgba(255,217,61,.45);background:rgba(255,217,61,.07)}
+  .bslot-t{font-size:12px;font-weight:900;color:#8fa89a;margin-bottom:6px}
+  .bslot-n{font-size:16px;font-weight:900;color:#e8f2ec}
+  .bslot-s{font-size:11px;font-weight:700;color:#8fa89a;margin-top:4px}
+  .breed-x{display:flex;align-items:center;font-size:20px;color:#6f8579;font-weight:900}
+  .breed-hint{font-size:12.5px;font-weight:700;color:#8fa89a;line-height:1.7;
+              background:rgba(255,255,255,.03);border-radius:12px;padding:10px 14px;margin-bottom:14px}
+  .breed-hint b{color:#ffd93d}
+  .pickcard{cursor:pointer;position:relative;transition:.15s}
+  .pickcard:hover{border-color:rgba(255,217,61,.45);transform:translateY(-2px)}
+  .pickcard.sel{border-color:#ffd93d;background:rgba(255,217,61,.12);
+                box-shadow:0 0 0 2px rgba(255,217,61,.35) inset}
+  .pickcard.dim{opacity:.35;filter:grayscale(.6)}
+
+  .shop-target{display:flex;align-items:center;gap:10px;margin-bottom:14px;
+               font-weight:800;font-size:13.5px;color:#9fb8aa;flex-wrap:wrap}
+  .shop-target select{flex:1;min-width:180px;background:rgba(255,255,255,.06);
+        border:1px solid rgba(255,255,255,.14);color:#e8f2ec;padding:9px 12px;
+        border-radius:10px;font-family:inherit;font-weight:700;font-size:13.5px;outline:none}
+  .shop-item{display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.04);
+             border:1px solid rgba(255,255,255,.09);border-radius:14px;
+             padding:12px 14px;margin-bottom:10px;transition:.15s}
+  .shop-item:hover{border-color:rgba(255,217,61,.3);background:rgba(255,255,255,.065)}
+  .shop-item .ico{font-size:28px;width:44px;text-align:center;flex-shrink:0}
+  .shop-item .nm{font-weight:900;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .shop-item .ds{font-size:12px;color:#8fa89a;font-weight:700;margin-top:3px;line-height:1.5}
+  .own{font-size:10.5px;font-weight:900;color:#63e6be;background:rgba(99,230,190,.14);
+       padding:1px 8px;border-radius:999px;border:1px solid rgba(99,230,190,.3)}
+
+  .bet-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+  .betcard{background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.09);
+           border-radius:15px;padding:12px;cursor:pointer;transition:.16s;position:relative;overflow:hidden}
+  .betcard:hover{border-color:rgba(255,217,61,.4);transform:translateY(-2px)}
+  .betcard.sel{border-color:#ffd93d;background:rgba(255,217,61,.13);
+               box-shadow:0 0 22px rgba(255,217,61,.22)}
+  .betcard .bn{font-weight:900;font-size:15px;margin-bottom:6px;padding-right:52px;
+               white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .betcard .bo{position:absolute;top:10px;right:12px;font-weight:900;font-size:18px;color:#ffd93d;
+               font-variant-numeric:tabular-nums}
+  .betcard .bs{font-size:11px;color:#8fa89a;font-weight:700;line-height:1.6}
+  .betcard .bs b{color:#d5e6dd}
+  .betcard canvas{width:100%;height:64px;border-radius:10px;background:rgba(0,0,0,.22);
+                  margin-bottom:8px;display:block}
+  .bet-money{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .bet-money .lb{font-weight:800;font-size:13.5px;color:#9fb8aa}
+  .chip{padding:8px 18px;border-radius:999px;font-weight:900;font-size:13.5px;
+        background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);
+        color:#c8ddd2;cursor:pointer;transition:.15s;font-family:inherit}
+  .chip:hover{background:rgba(255,255,255,.12)}
+  .chip.on{background:rgba(255,217,61,.2);border-color:rgba(255,217,61,.55);color:#ffd93d}
+
+  @media (max-width:640px){
+    .hud-right .btn{padding:7px 10px;font-size:11.5px}
+    .pill{font-size:12.5px;padding:6px 11px}
+    .card-title{font-size:15px}
+    #tip{font-size:11px;padding:6px 12px}
+    .breed-slots{flex-direction:column}
+    .breed-x{justify-content:center;transform:rotate(90deg)}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="hud-left">
+    <div class="pill">🪙 <b id="uiCoins">500</b></div>
+    <div class="pill">🐴 <b id="uiCount">0</b></div>
+    <div class="pill">🏆 <b id="uiWins">0</b></div>
+    <div class="pill">🪢 <b id="uiLasso">3</b></div>
+    <div class="pill">🌿 <b id="uiHerb">1</b></div>
+  </div>
+  <div class="hud-right">
+    <button class="btn small" id="btnStable">🐴 马厩</button>
+    <button class="btn small blue" id="btnBreed">🧬 育马场</button>
+    <button class="btn small pink" id="btnShop">🛒 商店</button>
+    <button class="btn small ghost" id="btnBet">🎰 赌马场</button>
+  </div>
+</div>
+
+<div id="tip">WASD / 方向键 移动　·　Shift 冲刺　·　靠近目标点击甩套索（消耗 🪢）</div>
+<div id="toast"></div>
+
+<div id="capUI" class="hidden">
+  <div class="capbox">
+    <div class="t">🪢 套住了！疯狂点击挣脱！</div>
+    <div class="capbar"><div class="capfill" id="capFill"></div></div>
+    <div class="h">疯狂点击屏幕 / 敲空格键</div>
+  </div>
+</div>
+
+<div id="stableOverlay" class="overlay hidden">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">🐴 我的马厩 <span id="stableSub">共 0 匹</span></div>
+      <button class="btn ghost" id="btnCloseStable">关闭 ✕</button>
+    </div>
+    <div class="card-body"><div class="grid" id="stableGrid"></div></div>
+  </div>
+</div>
+
+<div id="breedOverlay" class="overlay hidden">
+  <div class="card" style="max-width:960px">
+    <div class="card-head">
+      <div class="card-title">🧬 育马场 <span id="breedSub"></span></div>
+      <button class="btn ghost" id="btnCloseBreed">关闭 ✕</button>
+    </div>
+    <div class="card-body">
+      <div class="breed-slots">
+        <div class="bslot" id="slotMale">
+          <div class="bslot-t">♂ 父本（公马）</div>
+          <div class="bslot-n" style="color:#6f8579;font-size:14px">点击下方公马选择</div>
+        </div>
+        <div class="breed-x">✕</div>
+        <div class="bslot" id="slotFemale">
+          <div class="bslot-t">♀ 母本（母马）</div>
+          <div class="bslot-n" style="color:#6f8579;font-size:14px">点击下方母马选择</div>
+        </div>
+      </div>
+
+      <div class="breed-hint">
+        后代数值取自父母双方基因的<b>叠加均值</b>，并上下浮动 ±15%。<br>
+        有几率突变出父母没有的体型 / 花色 / 配饰。每次繁育消耗 <b>🌿 育马灵草 ×1</b>。
+      </div>
+
+      <button class="btn" id="btnDoBreed" style="width:100%;padding:13px;margin-bottom:16px">
+        🧬 开始繁育（消耗 🌿 育马灵草 ×1）
+      </button>
+
+      <div class="grid" id="breedGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div id="shopOverlay" class="overlay hidden">
+  <div class="card" style="max-width:820px">
+    <div class="card-head">
+      <div class="card-title">🛒 商店 <span id="shopCoins">🪙 0</span></div>
+      <button class="btn ghost" id="btnCloseShop">关闭 ✕</button>
+    </div>
+    <div class="card-body">
+      <div class="shop-target">
+        <span>🎯 训练目标</span>
+        <select id="trainTarget"></select>
+      </div>
+      <div id="shopList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="betOverlay" class="overlay hidden">
+  <div class="card" style="max-width:900px">
+    <div class="card-head">
+      <div class="card-title">🎰 赌马场 <span id="betSub">选一匹马下注</span></div>
+      <button class="btn ghost" id="btnCloseBet">关闭 ✕</button>
+    </div>
+    <div class="card-body">
+      <div class="bet-list" id="betList"></div>
+      <div class="bet-money">
+        <span class="lb">💰 下注金额</span>
+        <button class="chip on" data-amt="50">50</button>
+        <button class="chip" data-amt="100">100</button>
+        <button class="chip" data-amt="300">300</button>
+        <button class="chip" data-amt="1000">1000</button>
+        <button class="chip" data-amt="3000">3000</button>
+        <button class="btn ghost small" id="btnReroll" style="margin-left:auto">🔄 换一批马</button>
+      </div>
+      <button class="btn" id="btnStartBet" style="width:100%;padding:14px;font-size:16px">
+        🏁 开始比赛
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="resultOverlay" class="overlay hidden">
+  <div class="card" style="max-width:560px">
+    <div class="card-body">
+      <div class="result" id="resultBody"></div>
+      <button class="btn" id="btnCloseResult" style="width:100%;padding:14px">回 到 原 野</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================== 基础工具 ============================== */
+const cvs = document.getElementById('game');
+const ctx = cvs.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  cvs.width = Math.floor(W * DPR);
+  cvs.height = Math.floor(H * DPR);
+  cvs.style.width = W + 'px';
+  cvs.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+const TAU = Math.PI * 2;
+const rnd = (a,b) => a + Math.random()*(b-a);
+const rndi = (a,b) => Math.floor(rnd(a,b+1));
+const clamp = (v,a,b) => v<a?a:(v>b?b:v);
+const lerp = (a,b,t) => a+(b-a)*t;
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+function hexToRgb(hex){
+  hex = String(hex).replace('#','');
+  if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+  return { r: parseInt(hex.slice(0,2),16), g: parseInt(hex.slice(2,4),16), b: parseInt(hex.slice(4,6),16) };
+}
+function shade(hex, amt){
+  const c = hexToRgb(hex);
+  let nr, ng, nb;
+  if (amt < 0){ nr=c.r*(1+amt); ng=c.g*(1+amt); nb=c.b*(1+amt); }
+  else { nr=c.r+(255-c.r)*amt; ng=c.g+(255-c.g)*amt; nb=c.b+(255-c.b)*amt; }
+  return 'rgb('+(nr|0)+','+(ng|0)+','+(nb|0)+')';
+}
+function rgba(hex, a){
+  const c = hexToRgb(hex);
+  return 'rgba('+c.r+','+c.g+','+c.b+','+a+')';
+}
+function roundRect(g,x,y,w,h,r){
+  r = Math.max(0, Math.min(r, Math.abs(w)/2, Math.abs(h)/2));
+  g.beginPath();
+  g.moveTo(x+r,y);
+  g.arcTo(x+w,y,x+w,y+h,r);
+  g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r);
+  g.arcTo(x,y,x+w,y,r);
+  g.closePath();
+}
+function mulberry(a){
+  return function(){
+    a|=0; a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+
+/* ============================== 外观配置 ============================== */
+const COLORS = [
+  '#8B5A2B','#5C4033','#D2B48C','#F0E6D2','#2F2F2F','#A0522D','#C0C0C0','#DEB887',
+  '#7A5230','#6B4423','#4A3728','#E8D8C0','#6b8fa8','#8a7ba8','#5f8a7a','#7b5ea7',
+  '#a05fa0','#5f7fa0','#8a4f7a','#d4af37','#e8c547','#c9a227','#ff6b6b','#4ecdc4',
+  '#ffe66d','#95e1d3','#f38181','#aa96da','#ff9f67','#63e6be','#ff6bcb','#6bcbff'
+];
+const HEAD_SHAPES = ['normal','big','tiny','square','round','pointy','blob','flat','long'];
+const TAILS = ['short','short','short','long','fluffy','spike','fan','none'];
+const PATTERNS = ['solid','solid','solid','solid','spots','stripes','patches','stars','zigzag'];
+const ACCESSORIES = ['none','none','none','none','none','hat','glasses','crown','scarf','antenna'];
+const TEMPERS = ['calm','normal','wild','lazy'];
+const TEMPER_NAME = { calm:'沉稳', normal:'普通', wild:'神经刀', lazy:'慢热' };
+
+const MOVE_STYLES = {
+  oval:   { label:'轻快小跑', bob:1.00, wobble:0.55, hop:0, legSpeed:1.00, stretch:0.00, speed:1.00 },
+  round:  { label:'弹弹跳跳', bob:2.20, wobble:0.30, hop:1, legSpeed:0.78, stretch:0.00, speed:0.92 },
+  square: { label:'僵直颠簸', bob:1.70, wobble:0.18, hop:0, legSpeed:0.92, stretch:0.00, speed:0.95 },
+  bean:   { label:'波浪摇摆', bob:1.20, wobble:1.70, hop:0, legSpeed:1.00, stretch:0.05, speed:0.97 },
+  long:   { label:'蜿蜒滑行', bob:0.70, wobble:2.30, hop:0, legSpeed:1.05, stretch:0.07, speed:1.06 },
+  tiny:   { label:'碎步抖动', bob:1.50, wobble:0.85, hop:0, legSpeed:2.10, stretch:0.00, speed:1.12 },
+  huge:   { label:'沉重慢步', bob:0.80, wobble:0.35, hop:0, legSpeed:0.62, stretch:0.00, speed:0.85 },
+  worm:   { label:'一伸一缩', bob:0.60, wobble:0.55, hop:0, legSpeed:0.50, stretch:0.22, speed:0.80 },
+  wedge:  { label:'前倾猛冲', bob:1.35, wobble:0.42, hop:0, legSpeed:1.15, stretch:0.02, speed:1.04 },
+  pear:   { label:'后坐发力', bob:1.10, wobble:0.72, hop:0, legSpeed:0.95, stretch:0.03, speed:0.99 },
+  flat:   { label:'贴地飞驰', bob:0.85, wobble:1.35, hop:0, legSpeed:1.30, stretch:0.04, speed:1.09 },
+  tall:   { label:'高抬腿走', bob:2.40, wobble:0.40, hop:1, legSpeed:0.70, stretch:0.00, speed:0.90 },
+  blob:   { label:'一坨挪动', bob:2.00, wobble:0.90, hop:0, legSpeed:0.66, stretch:0.10, speed:0.88 },
+  hump:   { label:'弓背驼行', bob:1.55, wobble:0.60, hop:0, legSpeed:0.88, stretch:0.03, speed:0.96 }
+};
+function moveStyleOf(shape){ return MOVE_STYLES[shape] || MOVE_STYLES.oval; }
+
+const HORSE_NAMES = [
+  '闪电','追风','黑旋风','烈焰','流星','银月','狂风','雷霆','暗影','飞雪',
+  '赤兔','乌骓','绝影','白龙','夜行','奔雷','踏雪','疾风','幻影','星光',
+  '铁蹄','花斑','火麒麟','冰霜','风语者','彩虹','暴风','云中君','踏浪','黑曜石',
+  '黄金瞳','银河','幽灵','赤焰','霜刃','青鸾','白泽','沙暴','午夜','煎饼',
+  '土豆','憨憨','大头','面条','咕噜','二狗子','大力','旺财','麻花','宇宙无敌',
+  '板凳','拖鞋','泡面','西瓜','冰箱','扫地机','咸鱼','螺蛳粉','微波炉','章鱼哥'
+];
+const CAR_NAMES = ['五菱宏光','AE86','蓝翔拖拉机','赛博皮卡','大脚车','碰碰车','老头乐','坦克300','洒水车','秋名山车神'];
+const WHALE_NAMES = ['深潜娘','DeepSeek娘','小蓝鲸','鲸宝','V3娘','R1娘','鲸鱼博士','蓝鲸酱','潜水员小蓝'];
+
+const KIND_LABEL = { horse:'🐴 马', car:'🚗 车', whale:'🐋 鲸鱼娘' };
+const KIND_BONUS = { horse:1.0, car:1.6, whale:2.0 };
+
+const GENDERS = ['male','female'];
+const GENDER_LABEL = { male:'♂ 公', female:'♀ 母' };
+
+let UID = 0, namePool = [];
+function pickName(kind){
+  if (kind === 'car')   return pick(CAR_NAMES)  + (Math.random()<0.4 ? '·'+pick(['改','Turbo','Pro','MAX','GT']) : '');
+  if (kind === 'whale') return pick(WHALE_NAMES)+ (Math.random()<0.4 ? '·'+pick(['R1','V3','Pro','Mini','酱','号']) : '');
+  if (namePool.length === 0) namePool = HORSE_NAMES.slice().sort(()=>Math.random()-0.5);
+  let n = namePool.pop();
+  if (!n) n = '无名氏' + rndi(1,999);
+  return n + (Math.random()<0.25 ? '·'+pick(['二号','三世','大王','小可爱','Plus','Pro','Mini','MAX']) : '');
+}
+
+/* ============================== 年龄系统 ============================== */
+const AGE_PEAK = 5;
+const AGE_STEP = 0.075;
+function ageFactor(age){
+  return clamp(1 - Math.abs(age - AGE_PEAK) * AGE_STEP, 0.25, 1);
+}
+function ageLabel(age){
+  if (age <= 1) return '幼驹';
+  if (age === 2) return '小马';
+  if (age === 3) return '青年';
+  if (age === 4) return '壮年';
+  if (age === 5) return '巅峰';
+  if (age <= 7) return '成熟';
+  if (age <= 9) return '老练';
+  return '高龄';
+}
+function ageTagClass(age){
+  if (age === AGE_PEAK) return 'atag peak';
+  if (age <= 3 || age >= 9) return 'atag old';
+  return 'atag';
+}
+function rollAge(){
+  const r = Math.random();
+  if (r < 0.06) return rndi(1,2);
+  if (r < 0.18) return 3;
+  if (r < 0.36) return 4;
+  if (r < 0.62) return 5;
+  if (r < 0.80) return 6;
+  if (r < 0.91) return 7;
+  if (r < 0.97) return 8;
+  return rndi(9,11);
+}
+
+/* ============================== 外观生成 ============================== */
+function generateLook(){
+  const coat = pick(COLORS);
+
+  const roll = Math.random();
+  let shape, bl, bw;
+  if (roll<0.13){ shape='oval';   bl=rnd(24,36); bw=rnd(13,20); }
+  else if (roll<0.23){ shape='round';  bl=rnd(19,30); bw=rnd(18,27); }
+  else if (roll<0.32){ shape='square'; bl=rnd(23,33); bw=rnd(17,25); }
+  else if (roll<0.41){ shape='bean';   bl=rnd(28,40); bw=rnd(10,17); }
+  else if (roll<0.49){ shape='long';   bl=rnd(36,48); bw=rnd(9,15); }
+  else if (roll<0.57){ shape='tiny';   bl=rnd(13,21); bw=rnd(9,15); }
+  else if (roll<0.64){ shape='huge';   bl=rnd(36,52); bw=rnd(24,36); }
+  else if (roll<0.70){ shape='worm';   bl=rnd(32,46); bw=rnd(6,10); }
+  else if (roll<0.76){ shape='wedge';  bl=rnd(28,42); bw=rnd(15,24); }
+  else if (roll<0.82){ shape='pear';   bl=rnd(28,42); bw=rnd(15,24); }
+  else if (roll<0.87){ shape='flat';   bl=rnd(38,54); bw=rnd(8,13); }
+  else if (roll<0.92){ shape='tall';   bl=rnd(17,25); bw=rnd(23,33); }
+  else if (roll<0.96){ shape='blob';   bl=rnd(20,30); bw=rnd(21,30); }
+  else { shape='hump'; bl=rnd(26,38); bw=rnd(16,24); }
+
+  const legCount  = pick([4,4,4,4,4,4,4,4,2,2,3,5,6,6,8,8,0,0,1,10]);
+  const legLen    = +rnd(0.25, 2.3).toFixed(2);
+  const legWidth  = +rnd(1.6, 7.5).toFixed(2);
+  const neckLength= +rnd(0, 2.6).toFixed(2);
+  const headSize  = +rnd(0.45, 2.2).toFixed(2);
+  const headShape = pick(HEAD_SHAPES);
+  const eyes      = pick([2,2,2,2,2,1,3,4,5,0]);
+  const horns     = pick([0,0,0,0,1,2,2,3,4]);
+  const wings     = Math.random()<0.13 ? 1 : 0;
+  const tail      = pick(TAILS);
+  const tailLen   = +rnd(0.3, 1.8).toFixed(2);
+  const pattern   = pick(PATTERNS);
+  const accessory = pick(ACCESSORIES);
+
+  const earType   = pick(['normal','normal','small','big','long','floppy','none']);
+  const eyeStyle  = pick(['normal','normal','normal','normal','sleepy','angry','wide','dot','star']);
+  const backArch  = +rnd(-0.40, 0.55).toFixed(2);
+  const belly     = +rnd(0.72, 1.30).toFixed(2);
+  const snout     = +rnd(0.6, 1.8).toFixed(2);
+  const bellyColor= Math.random()<0.42
+    ? pick([shade(coat,0.45),'#f0e6d2','#e8d8c0','#ffffff',shade(coat,-0.30)])
+    : null;
+
+  const maneColor    = pick([shade(coat,-0.42), shade(coat,-0.6), '#2a1f14', '#ffffff', '#ffd700', '#ff6bcb', '#63e6be']);
+  const legColor     = pick([shade(coat,-0.3), shade(coat,-0.5), shade(coat,0.2), '#222222']);
+  const hornColor    = pick(['#f0e6d2','#e8c547','#c0c0c0','#ff9f67','#b197fc']);
+  const wingColor    = pick(['#f0e6d2','#b197fc','#63e6be','#ffe66d','#ff6bcb','#ffffff']);
+  const patternColor = pick(['#ffffff','#000000','#ffd93d','#ff6b6b','#b197fc','#63e6be']);
+
+  return { coat, shape, bl, bw, legCount, legLen, legWidth, legColor,
+    neckLength, headSize, headShape, eyes, horns, hornColor, wings, wingColor,
+    tail, tailLen, maneColor, pattern, patternColor, accessory,
+    earType, eyeStyle, backArch, belly, snout, bellyColor,
+    seed: rndi(1,999999) };
+}
+
+const NUMERIC_LOOK = ['bl','bw','legLen','legWidth','neckLength','headSize','tailLen','backArch','belly','snout'];
+
+function calcWeirdness(L){
+  let w = 0;
+  w += Math.abs(L.bl / L.bw - 2.2) * 1.0;
+  w += Math.abs(L.legCount - 4) * 0.7;
+  w += Math.max(0, Math.abs(L.legLen - 1.0) - 0.25) * 1.6;
+  w += Math.abs(L.legWidth - 4) * 0.28;
+  w += L.neckLength * 0.9;
+  w += Math.abs(L.headSize - 1) * 1.7;
+  w += L.headShape === 'normal' ? 0 : 0.8;
+  w += Math.abs(L.eyes - 2) * 0.95;
+  w += L.horns * 0.85;
+  w += L.wings * 3.5;
+  w += L.tail === 'none' ? 0.5 : (L.tail === 'short' ? 0 : 0.7);
+  w += L.accessory === 'none' ? 0 : 0.7;
+  w += L.pattern === 'solid' ? 0 : 0.5;
+  w += Math.abs(L.backArch || 0) * 1.1;
+  w += Math.abs((L.belly || 1) - 1) * 1.3;
+  w += (L.earType === 'none' || L.earType === 'floppy' || L.earType === 'long') ? 0.55 : 0;
+  w += L.eyeStyle !== 'normal' ? 0.35 : 0;
+  w += L.bellyColor ? 0.15 : 0;
+  return +clamp(w, 0, 22).toFixed(2);
+}
+function weirdLabel(w){
+  if (w<2.5) return '平平无奇';
+  if (w<5)   return '有点怪';
+  if (w<8)   return '相当离奇';
+  if (w<12)  return '非常离谱';
+  if (w<16)  return '这是什么鬼';
+  return '不可名状';
+}
+function balanceLabel(b){
+  if (b>=78) return { text:'稳如泰山', color:'#63e6be' };
+  if (b>=60) return { text:'四平八稳', color:'#8ce99a' };
+  if (b>=42) return { text:'马马虎虎', color:'#ffd93d' };
+  if (b>=25) return { text:'摇摇晃晃', color:'#ffa94d' };
+  if (b>=12) return { text:'三步一跤', color:'#ff8787' };
+  return { text:'站起来都难', color:'#ff6b6b' };
+}
+
+/* ============================== 马匹数据 ============================== */
+function makeHorse(kind){
+  kind = kind || 'horse';
+  const look = generateLook();
+  const weird = calcWeirdness(look);
+  const wn = clamp(weird / 18, 0, 1);
+
+  const muscle  = clamp(Math.round(rnd(28,68) + wn*42 + rnd(-16,16)), 5, 100);
+  const stamina = clamp(Math.round(rnd(28,68) + wn*38 + rnd(-16,16)), 5, 100);
+  const balance = clamp(Math.round(86 - wn*52 + rnd(-26,26)), 5, 100);
+  const luck    = clamp(Math.round(rnd(20,78) + rnd(-18,18)), 5, 100);
+  const temper  = pick(TEMPERS);
+
+  const height    = +clamp(rnd(0.7,1.7) + wn*1.2, 0.35, 3.4).toFixed(2);
+  const legLength = +clamp(rnd(0.35,1.15) + wn*0.95, 0.12, 2.6).toFixed(2);
+  const weight    = Math.round(clamp(150 + height*190 + muscle*2.0 + rnd(-60,110), 60, 1500));
+
+  return {
+    uid: ++UID, kind: kind, name: pickName(kind), wins: 0, raceCount: 0,
+    age: rollAge(), weirdness: weird,
+    gender: pick(GENDERS),
+    generation: 1,
+    genes: { height, legLength, weight, muscle, stamina, balance, luck, temper },
+    look: look
+  };
+}
+
+function effGenes(h){
+  const f = ageFactor(h.age);
+  const g = h.genes;
+  return {
+    muscle: g.muscle * f,
+    stamina: g.stamina * f,
+    balance: g.balance * f,
+    luck: g.luck * f,
+    height: g.height,
+    legLength: g.legLength,
+    weight: g.weight,
+    temper: g.temper
+  };
+}
+function horsePower(h){
+  const g = effGenes(h);
+  return g.muscle*0.5 + g.stamina*0.3 + g.balance*0.35 + g.luck*0.1 +
+         g.height*8 + g.legLength*10 - Math.max(0, g.weight-500)*0.03 + h.weirdness*0.6;
+}
+function horsePrice(h){
+  const base = 80 + horsePower(h) * 3.2;
+  return Math.round(base * (KIND_BONUS[h.kind] || 1));
+}
+
+/* ============================== 繁殖 ============================== */
+function mixLook(a, b){
+  const out = {};
+  for (const k in a){
+    if (k === 'seed'){ out.seed = rndi(1,999999); continue; }
+    const va = a[k], vb = b[k];
+    if (NUMERIC_LOOK.indexOf(k) >= 0 && typeof va === 'number' && typeof vb === 'number'){
+      out[k] = +(((va + vb) * 0.5) * rnd(0.85, 1.16)).toFixed(2);
+    } else {
+      if (Math.random() < 0.08) out[k] = a[k];
+      else out[k] = Math.random() < 0.5 ? va : vb;
+    }
+  }
+  return out;
+}
+
+function breedHorses(father, mother){
+  const child = makeHorse('horse');
+  const gf = father.genes, gm = mother.genes;
+  const mixStat = (a, b) => clamp(Math.round((a + b) * 0.5 * rnd(0.86, 1.18)), 5, 100);
+
+  child.genes.muscle   = mixStat(gf.muscle,  gm.muscle);
+  child.genes.stamina  = mixStat(gf.stamina, gm.stamina);
+  child.genes.balance  = mixStat(gf.balance, gm.balance);
+  child.genes.luck     = mixStat(gf.luck,    gm.luck);
+
+  child.genes.height    = +clamp((gf.height + gm.height) * 0.5 * rnd(0.9, 1.12), 0.35, 3.4).toFixed(2);
+  child.genes.legLength = +clamp((gf.legLength + gm.legLength) * 0.5 * rnd(0.9, 1.12), 0.12, 2.6).toFixed(2);
+  child.genes.weight    = Math.round(clamp((gf.weight + gm.weight) * 0.5 * rnd(0.9, 1.1), 60, 1500));
+  child.genes.temper    = Math.random() < 0.5 ? gf.temper : gm.temper;
+
+  child.age = AGE_PEAK;
+  child.look = mixLook(father.look, mother.look);
+  child.weirdness = calcWeirdness(child.look);
+  child.name = pickName('horse');
+  child.gender = pick(GENDERS);
+  child.generation = Math.max(father.generation || 1, mother.generation || 1) + 1;
+  child.parents = [father.name, mother.name];
+  return child;
+}
+
+/* ============================== 身体轮廓 ============================== */
+function horseBodyPath(g, x, y, rx, ry, L){
+  const shape = L.shape;
+  const arch  = (L.backArch !== undefined) ? L.backArch : 0;
+  const botK  = (L.belly !== undefined) ? L.belly : 1;
+  const topK  = 1 + arch;
+
+  g.beginPath();
+
+  if (shape === 'square'){
+    roundRect(g, x - rx, y - ry*topK, rx*2, ry*(topK + botK), ry*0.55);
+    return;
+  }
+
+  if (shape === 'wedge'){
+    g.moveTo(x - rx*0.90, y - ry*0.20);
+    g.bezierCurveTo(x - rx*0.60, y - ry*0.95, x + rx*0.10, y - ry*1.05, x + rx*0.98, y - ry*0.80);
+    g.bezierCurveTo(x + rx*1.24, y + ry*0.05, x + rx*0.95, y + ry*0.85, x + rx*0.45, y + ry*0.95);
+    g.bezierCurveTo(x - rx*0.10, y + ry*1.02, x - rx*0.70, y + ry*0.85, x - rx*0.90, y - ry*0.20);
+    g.closePath();
+    return;
+  }
+
+  if (shape === 'pear'){
+    g.moveTo(x - rx*1.00, y - ry*0.15);
+    g.bezierCurveTo(x - rx*0.70, y - ry*0.85, x + rx*0.05, y - ry*0.95, x + rx*0.80, y - ry*0.55);
+    g.bezierCurveTo(x + rx*1.05, y + ry*0.05, x + rx*0.95, y + ry*0.80, x + rx*0.40, y + ry*1.05);
+    g.bezierCurveTo(x - rx*0.25, y + ry*1.38, x - rx*0.85, y + ry*1.20, x - rx*1.00, y - ry*0.15);
+    g.closePath();
+    return;
+  }
+
+  if (shape === 'hump'){
+    g.moveTo(x - rx*0.95, y - ry*0.30);
+    g.bezierCurveTo(x - rx*0.75, y - ry*1.35, x - rx*0.25, y - ry*1.30, x, y - ry*1.45);
+    g.bezierCurveTo(x + rx*0.30, y - ry*1.30, x + rx*0.72, y - ry*1.05, x + rx*0.95, y - ry*0.45);
+    g.bezierCurveTo(x + rx*1.18, y + ry*0.10, x + rx*1.00, y + ry*botK*0.80, x + rx*0.50, y + ry*botK*0.98);
+    g.bezierCurveTo(x - rx*0.10, y + ry*botK*1.10, x - rx*0.72, y + ry*botK*1.00, x - rx*0.95, y - ry*0.30);
+    g.closePath();
+    return;
+  }
+
+  g.moveTo(x - rx*0.95, y - ry*0.32*topK);
+  g.bezierCurveTo(
+    x - rx*0.55, y - ry*1.12*topK,
+    x + rx*0.10, y - ry*1.12*topK,
+    x + rx*0.95, y - ry*0.42*topK
+  );
+  g.bezierCurveTo(
+    x + rx*1.16, y - ry*0.05,
+    x + rx*1.02, y + ry*0.72*botK,
+    x + rx*0.52, y + ry*0.95*botK
+  );
+  g.bezierCurveTo(
+    x - rx*0.05, y + ry*1.10*botK,
+    x - rx*0.70, y + ry*1.00*botK,
+    x - rx*0.95, y - ry*0.32*topK
+  );
+  g.closePath();
+}
+
+/* ============================== 绘制：马 ============================== */
+function drawHorseSide(g, x, groundY, scale, h, phase, speed, isPlayer, fallen){
+  const L = h.look;
+  const M = moveStyleOf(L.shape);
+  const spd01 = clamp(speed/18, 0, 1.2);
+  const moving = speed > 1.5;
+
+  const bl = L.bl * scale;
+  const bh = L.bw * 1.05 * scale;
+  const legLen = (5 + L.legLen * 8) * scale;
+
+  const hopY = M.hop
+    ? Math.abs(Math.sin(phase*1.5)) * 12 * spd01 * scale
+    : Math.abs(Math.sin(phase*1.3)) * M.bob * 2.6 * spd01 * scale;
+
+  const footY = groundY - hopY;
+  const bodyY = footY - legLen - bh*0.5;
+
+  g.save();
+  if (fallen){
+    g.translate(x, groundY);
+    g.rotate(1.18);
+    g.translate(-x, -groundY);
+  }
+
+  /* 影子 */
+  g.fillStyle = 'rgba(0,0,0,0.26)';
+  g.beginPath();
+  g.ellipse(x + 3*scale, groundY + 2*scale, bl*0.60, 5.5*scale, 0, 0, TAU);
+  g.fill();
+
+  /* 腿 */
+  if (L.legCount > 0){
+    const backLegs = Math.max(1, Math.floor(L.legCount/2));
+    const frontLegs = Math.max(1, L.legCount - backLegs);
+    g.strokeStyle = L.legColor;
+    g.lineWidth = Math.max(2.0, L.legWidth * scale * 0.9);
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+
+    const drawLeg = function(lx, seedIdx, isBack){
+      const hipY = bodyY + bh * 0.34;
+      const swing = moving
+        ? Math.sin(phase*M.legSpeed + seedIdx*1.7 + (isBack ? 0 : Math.PI)) * 0.42 * spd01
+        : 0;
+      const footX = lx + Math.sin(swing) * legLen * 0.55;
+      const midX  = lx + Math.sin(swing) * legLen * 0.25;
+      const midY  = hipY + (footY - hipY) * 0.55;
+      g.beginPath();
+      g.moveTo(lx, hipY);
+      g.lineTo(midX, midY);
+      g.lineTo(footX, footY);
+      g.stroke();
+      g.fillStyle = '#2b2118';
+      g.beginPath();
+      g.arc(footX, footY - 1.2*scale, 2.5*scale, 0, TAU);
+      g.fill();
+    };
+    for (let i=0;i<backLegs;i++){
+      const f = backLegs<=1 ? 0.5 : i/(backLegs-1);
+      drawLeg(x - bl*0.30 + f*bl*0.18, i, true);
+    }
+    for (let i=0;i<frontLegs;i++){
+      const f = frontLegs<=1 ? 0.5 : i/(frontLegs-1);
+      drawLeg(x + bl*0.14 + f*bl*0.18, i+3, false);
+    }
+  }
+
+  /* 尾巴 */
+  if (L.tail !== 'none'){
+    g.strokeStyle = L.maneColor;
+    g.lineWidth = (L.tail==='fluffy' ? 7 : 4) * scale + 0.4;
+    g.lineCap = 'round';
+    const tswing = Math.sin(phase*1.2) * 7 * spd01 * scale;
+    const tailX = x - bl*0.50;
+    const tailY = bodyY - bh*0.22;
+    g.beginPath();
+    g.moveTo(tailX, tailY);
+    if (L.tail === 'spike') g.lineTo(tailX - 14*scale, tailY - 6*scale + tswing);
+    else g.quadraticCurveTo(tailX - 16*scale, tailY - 4*scale + tswing,
+                            tailX - 20*scale, tailY + 10*scale + tswing);
+    g.stroke();
+    if (L.tail === 'fan'){
+      g.fillStyle = rgba(L.maneColor, 0.5);
+      g.beginPath();
+      g.ellipse(tailX - 20*scale, tailY + 10*scale + tswing, 7*scale, 11*scale, 0, 0, TAU);
+      g.fill();
+    }
+  }
+
+  /* 翅膀 */
+  if (L.wings){
+    const flap = Math.sin(phase*1.6) * 0.4 * (moving ? 1 : 0.3);
+    g.fillStyle = rgba(L.wingColor, 0.65);
+    g.strokeStyle = rgba(L.wingColor, 0.9);
+    g.lineWidth = 1.5 * scale + 0.3;
+    g.save();
+    g.translate(x - bl*0.05, bodyY - bh*0.35);
+    g.rotate(-0.5 + flap);
+    g.beginPath();
+    g.ellipse(-bl*0.22, -bh*0.95, bl*0.40, bh*0.85, 0, 0, TAU);
+    g.fill(); g.stroke();
+    g.restore();
+  }
+
+  /* 身体 */
+  const rx = bl*0.5, ry = bh*0.5;
+  horseBodyPath(g, x, bodyY, rx, ry, L);
+  g.fillStyle = L.coat;
+  g.fill();
+  g.strokeStyle = shade(L.coat, -0.35);
+  g.lineWidth = 1.2 * scale + 0.4;
+  g.stroke();
+
+  /* 肚皮 */
+  if (L.bellyColor){
+    g.save();
+    horseBodyPath(g, x, bodyY, rx, ry, L);
+    g.clip();
+    g.fillStyle = rgba(L.bellyColor, 0.75);
+    g.beginPath();
+    g.ellipse(x, bodyY + ry*1.02, rx*1.25, ry*0.72, 0, 0, TAU);
+    g.fill();
+    g.restore();
+  }
+
+  /* 花纹 */
+  if (L.pattern !== 'solid'){
+    g.save();
+    horseBodyPath(g, x, bodyY, rx, ry, L);
+    g.clip();
+    const r = mulberry(L.seed);
+    if (L.pattern === 'spots'){
+      g.fillStyle = rgba(L.patternColor, 0.65);
+      for (let i=0;i<10;i++){
+        g.beginPath();
+        g.arc(x+(r()-0.5)*bl, bodyY+(r()-0.5)*bh, 1.8*scale+r()*3*scale, 0, TAU);
+        g.fill();
+      }
+    } else if (L.pattern === 'stripes'){
+      g.strokeStyle = rgba(L.patternColor, 0.6);
+      g.lineWidth = 2.4*scale;
+      for (let i=-2;i<=2;i++){
+        g.beginPath();
+        g.moveTo(x + i*bl*0.16 - bl*0.08, bodyY-bh);
+        g.lineTo(x + i*bl*0.16 + bl*0.08, bodyY+bh);
+        g.stroke();
+      }
+    } else if (L.pattern === 'patches'){
+      g.fillStyle = rgba(L.patternColor, 0.6);
+      for (let i=0;i<4;i++){
+        g.beginPath();
+        g.ellipse(x+(r()-0.5)*bl*0.8, bodyY+(r()-0.5)*bh*0.8,
+                  5*scale+r()*4*scale, 4*scale+r()*4*scale, r()*3, 0, TAU);
+        g.fill();
+      }
+    } else if (L.pattern === 'stars'){
+      g.fillStyle = rgba(L.patternColor, 0.9);
+      for (let i=0;i<6;i++){
+        const sx = x+(r()-0.5)*bl*0.8, sy = bodyY+(r()-0.5)*bh*0.7, sr = 2*scale+r()*2*scale;
+        g.beginPath();
+        for (let k=0;k<5;k++){
+          const a1=-Math.PI/2+k*TAU/5, a2=a1+TAU/10;
+          if (k===0) g.moveTo(sx+Math.cos(a1)*sr, sy+Math.sin(a1)*sr);
+          else g.lineTo(sx+Math.cos(a1)*sr, sy+Math.sin(a1)*sr);
+          g.lineTo(sx+Math.cos(a2)*sr*0.45, sy+Math.sin(a2)*sr*0.45);
+        }
+        g.closePath();
+        g.fill();
+      }
+    } else if (L.pattern === 'zigzag'){
+      g.strokeStyle = rgba(L.patternColor, 0.7);
+      g.lineWidth = 2.4*scale;
+      g.beginPath();
+      for (let i=0;i<7;i++){
+        const yy = bodyY - bh*0.42 + i*bh*0.15;
+        if (i%2===0) g.moveTo(x-bl*0.45, yy);
+        else g.lineTo(x+bl*0.45, yy);
+      }
+      g.stroke();
+    }
+    g.restore();
+  }
+
+  /* 脖子 */
+  const neckBaseX = x + bl*0.34;
+  const neckBaseY = bodyY - bh*0.16;
+  const neckLen = L.neckLength * 12 * scale;
+  const neckTopX = neckBaseX + bl*0.04 + neckLen*0.55;
+  const neckTopY = neckBaseY - bh*0.40 - neckLen;
+
+  g.fillStyle = L.coat;
+  g.beginPath();
+  g.moveTo(neckBaseX - bl*0.14, neckBaseY + bh*0.14);
+  g.lineTo(neckTopX - bl*0.10, neckTopY);
+  g.lineTo(neckTopX + bl*0.11, neckTopY);
+  g.lineTo(neckBaseX + bl*0.16, neckBaseY + bh*0.14);
+  g.closePath();
+  g.fill();
+  g.strokeStyle = shade(L.coat, -0.30);
+  g.lineWidth = 1.1 * scale + 0.4;
+  g.stroke();
+
+  /* 头 */
+  const hr = bh * (0.58 + L.headSize * 0.18);
+  const headX = neckTopX + hr*0.28;
+  const headY = neckTopY - hr*0.42;
+
+  g.fillStyle = L.coat;
+  g.beginPath();
+  if (L.headShape === 'square'){
+    roundRect(g, headX - hr*1.0, headY - hr*0.84, hr*2.0, hr*1.68, hr*0.38);
+  } else if (L.headShape === 'pointy'){
+    g.moveTo(headX + hr*1.18, headY + hr*0.10);
+    g.lineTo(headX - hr*0.80, headY - hr*0.86);
+    g.lineTo(headX - hr*0.80, headY + hr*0.80);
+    g.closePath();
+  } else if (L.headShape === 'tiny'){
+    g.ellipse(headX, headY, hr*0.62, hr*0.56, 0, 0, TAU);
+  } else if (L.headShape === 'big'){
+    g.ellipse(headX, headY, hr*1.18, hr*1.02, 0, 0, TAU);
+  } else if (L.headShape === 'blob' || L.headShape === 'round'){
+    g.ellipse(headX, headY, hr*1.06, hr*0.94, 0, 0, TAU);
+  } else if (L.headShape === 'flat'){
+    g.ellipse(headX, headY, hr*1.30, hr*0.66, 0, 0, TAU);
+  } else if (L.headShape === 'long'){
+    g.ellipse(headX + hr*0.28, headY, hr*1.18, hr*0.72, 0, 0, TAU);
+  } else {
+    g.ellipse(headX, headY, hr*0.98, hr*0.86, 0, 0, TAU);
+  }
+  g.fill();
+  g.strokeStyle = shade(L.coat, -0.30);
+  g.lineWidth = 1.1 * scale + 0.4;
+  g.stroke();
+
+  /* 耳朵 */
+  const earR = hr*0.30;
+  const earType = L.earType || 'normal';
+  if (earType !== 'none'){
+    g.fillStyle = shade(L.coat, -0.18);
+    if (earType === 'big'){
+      g.beginPath(); g.ellipse(headX - hr*0.62, headY - hr*0.66, earR*1.5, earR*1.8, -0.30, 0, TAU); g.fill();
+      g.beginPath(); g.ellipse(headX + hr*0.42, headY - hr*0.78, earR*1.5, earR*1.8,  0.30, 0, TAU); g.fill();
+    } else if (earType === 'long'){
+      g.beginPath();
+      g.moveTo(headX - hr*0.72, headY - hr*0.52);
+      g.lineTo(headX - hr*1.00, headY - hr*1.90);
+      g.lineTo(headX - hr*0.42, headY - hr*0.70);
+      g.closePath(); g.fill();
+      g.beginPath();
+      g.moveTo(headX + hr*0.32, headY - hr*0.66);
+      g.lineTo(headX + hr*0.62, headY - hr*1.95);
+      g.lineTo(headX + hr*0.70, headY - hr*0.60);
+      g.closePath(); g.fill();
+    } else if (earType === 'floppy'){
+      g.beginPath(); g.ellipse(headX - hr*0.80, headY - hr*0.08, earR*0.9, earR*1.7, -0.60, 0, TAU); g.fill();
+      g.beginPath(); g.ellipse(headX + hr*0.30, headY - hr*0.18, earR*0.9, earR*1.7,  0.60, 0, TAU); g.fill();
+    } else if (earType === 'small'){
+      g.beginPath(); g.arc(headX - hr*0.58, headY - hr*0.62, earR*0.62, 0, TAU); g.fill();
+      g.beginPath(); g.arc(headX + hr*0.40, headY - hr*0.72, earR*0.62, 0, TAU); g.fill();
+    } else {
+      g.beginPath(); g.arc(headX - hr*0.60, headY - hr*0.60, earR, 0, TAU); g.fill();
+      g.beginPath(); g.arc(headX + hr*0.42, headY - hr*0.72, earR, 0, TAU); g.fill();
+    }
+  }
+
+  /* 眼睛 */
+  if (L.eyes > 0){
+    const er = hr*0.24;
+    const positions = [];
+    if (L.eyes <= 3){
+      for (let i=0;i<L.eyes;i++){
+        const f = L.eyes===1 ? 0.5 : i/(L.eyes-1);
+        positions.push([headX + lerp(-hr*0.10, hr*0.66, f), headY - hr*0.06]);
+      }
+    } else {
+      for (let i=0;i<L.eyes;i++){
+        const row = i<3 ? 0 : 1;
+        const idx = i<3 ? i : i-3;
+        const cnt = i<3 ? 3 : (L.eyes-3);
+        const f = cnt===1 ? 0.5 : idx/(cnt-1);
+        positions.push([headX + lerp(-hr*0.18, hr*0.70, f), headY - hr*0.26 + row*hr*0.44]);
+      }
+    }
+    const style = L.eyeStyle || 'normal';
+    for (let pi=0; pi<positions.length; pi++){
+      const ex = positions[pi][0], ey = positions[pi][1];
+      g.fillStyle = '#ffffff';
+      g.beginPath(); g.arc(ex, ey, er, 0, TAU); g.fill();
+
+      g.fillStyle = '#1a1410';
+      if (style === 'sleepy'){
+        g.fillRect(ex - er*0.82, ey - er*0.24, er*1.64, er*0.48);
+      } else if (style === 'angry'){
+        g.beginPath(); g.arc(ex + er*0.10, ey + er*0.16, er*0.50, 0, TAU); g.fill();
+        g.beginPath();
+        g.moveTo(ex - er*0.88, ey - er*0.80);
+        g.lineTo(ex + er*0.88, ey - er*0.18);
+        g.lineTo(ex + er*0.88, ey - er*0.88);
+        g.closePath(); g.fill();
+      } else if (style === 'wide'){
+        g.beginPath(); g.arc(ex, ey, er*0.80, 0, TAU); g.fill();
+      } else if (style === 'dot'){
+        g.beginPath(); g.arc(ex, ey, er*0.42, 0, TAU); g.fill();
+      } else if (style === 'star'){
+        g.beginPath(); g.arc(ex, ey, er*0.62, 0, TAU); g.fill();
+      } else {
+        g.beginPath(); g.arc(ex + er*0.08, ey + er*0.10, er*0.58, 0, TAU); g.fill();
+      }
+
+      if (style !== 'sleepy'){
+        g.fillStyle = 'rgba(255,255,255,0.95)';
+        g.beginPath(); g.arc(ex - er*0.22, ey - er*0.28, er*0.26, 0, TAU); g.fill();
+      }
+    }
+  }
+
+  /* 鼻子 */
+  const sn = L.snout || 1;
+  g.fillStyle = shade(L.coat, -0.45);
+  g.beginPath();
+  g.ellipse(headX + hr*0.86*sn, headY + hr*0.22, hr*0.16*sn, hr*0.12, 0, 0, TAU);
+  g.fill();
+
+  /* 嘴（五官） */
+  const mouthX = headX + hr*0.72*sn;
+  const mouthY = headY + hr*0.50;
+  g.strokeStyle = shade(L.coat, -0.58);
+  g.lineWidth = Math.max(1.2, 1.5*scale + 0.3);
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(mouthX - hr*0.30, mouthY - hr*0.08);
+  g.quadraticCurveTo(mouthX, mouthY + hr*0.30, mouthX + hr*0.30, mouthY - hr*0.10);
+  g.stroke();
+  if ((L.seed % 7) === 0){
+    g.fillStyle = '#ff8fb0';
+    g.beginPath();
+    g.ellipse(mouthX + hr*0.02, mouthY + hr*0.18, hr*0.10, hr*0.13, 0, 0, TAU);
+    g.fill();
+  }
+
+  /* 角 */
+  if (L.horns > 0){
+    g.fillStyle = L.hornColor;
+    for (let i=0;i<L.horns;i++){
+      const f = L.horns===1 ? 0.5 : i/(L.horns-1);
+      const hx = headX + lerp(-hr*0.50, hr*0.44, f);
+      g.beginPath();
+      g.moveTo(hx - hr*0.13, headY - hr*0.68);
+      g.lineTo(hx, headY - hr*1.52);
+      g.lineTo(hx + hr*0.13, headY - hr*0.68);
+      g.closePath();
+      g.fill();
+    }
+  }
+
+  /* 配饰 */
+  if (L.accessory === 'hat'){
+    g.fillStyle = '#d9a441';
+    g.beginPath();
+    g.arc(headX + hr*0.10, headY - hr*0.52, hr*0.72, Math.PI, TAU);
+    g.fill();
+    g.beginPath();
+    g.ellipse(headX + hr*0.10, headY - hr*0.52, hr*1.18, hr*0.24, 0, 0, TAU);
+    g.fill();
+  } else if (L.accessory === 'crown'){
+    g.fillStyle = '#ffd93d';
+    g.beginPath();
+    g.moveTo(headX - hr*0.55, headY - hr*0.78);
+    g.lineTo(headX - hr*0.28, headY - hr*1.42);
+    g.lineTo(headX + hr*0.10, headY - hr*0.82);
+    g.lineTo(headX + hr*0.46, headY - hr*1.42);
+    g.lineTo(headX + hr*0.74, headY - hr*0.78);
+    g.closePath();
+    g.fill();
+  } else if (L.accessory === 'glasses'){
+    g.strokeStyle = '#222';
+    g.lineWidth = 1.6*scale + 0.4;
+    g.beginPath(); g.arc(headX + hr*0.42, headY - hr*0.06, hr*0.30, 0, TAU); g.stroke();
+    g.beginPath(); g.arc(headX - hr*0.10, headY - hr*0.06, hr*0.30, 0, TAU); g.stroke();
+  } else if (L.accessory === 'scarf'){
+    g.fillStyle = '#ff6b6b';
+    g.beginPath();
+    g.ellipse(neckTopX + bl*0.02, neckTopY + bh*0.10, bl*0.13, bl*0.05, 0, 0, TAU);
+    g.fill();
+  } else if (L.accessory === 'antenna'){
+    g.strokeStyle = '#63e6be';
+    g.lineWidth = 1.6*scale + 0.3;
+    g.beginPath();
+    g.moveTo(headX + hr*0.10, headY - hr*0.80);
+    g.lineTo(headX - hr*0.12, headY - hr*2.20);
+    g.stroke();
+    g.fillStyle = '#ff6b6b';
+    g.beginPath();
+    g.arc(headX - hr*0.16, headY - hr*2.38, 2.6*scale + 1, 0, TAU);
+    g.fill();
+  }
+
+  /* 性别小标记 */
+  if (h.gender){
+    const gx = x - bl*0.62, gy = bodyY - bh*0.55;
+    g.font = 'bold ' + Math.max(9, 11*scale) + 'px system-ui,sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = h.gender === 'male' ? 'rgba(116,192,252,0.9)' : 'rgba(255,143,214,0.9)';
+    g.fillText(h.gender === 'male' ? '♂' : '♀', gx, gy);
+  }
+
+  /* 玩家标记 */
+  if (isPlayer){
+    g.fillStyle = '#ffd93d';
+    g.beginPath();
+    g.moveTo(x, bodyY - bh*1.7);
+    g.lineTo(x - 7*scale, bodyY - bh*2.2);
+    g.lineTo(x + 7*scale, bodyY - bh*2.2);
+    g.closePath();
+    g.fill();
+  }
+
+  if (fallen){
+    g.fillStyle = '#ffd93d';
+    g.font = 'bold '+(20*scale + 4)+'px system-ui,sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('💫', x, bodyY - bh*2);
+  }
+
+  g.restore();
+}
+
+/* ============================== 绘制：汽车 ============================== */
+function drawCarSide(g, x, groundY, scale, h, phase, speed, isPlayer, fallen){
+  const L = h.look;
+  const bl = (16 + L.bl*0.72) * scale;
+  const bh = (9 + L.bw*0.52) * scale;
+  const wr = bh*0.42;
+  const moving = speed > 1.5;
+  const spd01 = clamp(speed/18, 0, 1.2);
+  const bodyCol = L.coat;
+
+  g.save();
+  if (fallen){
+    g.translate(x, groundY);
+    g.rotate(1.35);
+    g.translate(-x, -groundY);
+  }
+
+  g.fillStyle = 'rgba(0,0,0,0.28)';
+  g.beginPath();
+  g.ellipse(x, groundY, bl*0.58, wr*0.55, 0, 0, TAU);
+  g.fill();
+
+  const bounce = Math.sin(phase*1.9) * 1.4 * scale * spd01;
+  const bodyBottom = groundY - wr*0.85 + bounce;
+  const bodyTop = bodyBottom - bh;
+
+  const spin = phase * (moving ? 1.2 : 0.05);
+  const wheelXs = [x - bl*0.28, x + bl*0.30];
+  for (let wi=0; wi<wheelXs.length; wi++){
+    const wx = wheelXs[wi];
+    g.fillStyle = '#1e1e22';
+    g.beginPath(); g.arc(wx, groundY - wr, wr, 0, TAU); g.fill();
+    g.fillStyle = '#5a5f66';
+    g.beginPath(); g.arc(wx, groundY - wr, wr*0.55, 0, TAU); g.fill();
+    g.strokeStyle = '#cfd4da';
+    g.lineWidth = Math.max(1, 1.3*scale);
+    for (let i=0;i<3;i++){
+      const a = spin + i*Math.PI/3;
+      g.beginPath();
+      g.moveTo(wx - Math.cos(a)*wr*0.5, groundY - wr - Math.sin(a)*wr*0.5);
+      g.lineTo(wx + Math.cos(a)*wr*0.5, groundY - wr + Math.sin(a)*wr*0.5);
+      g.stroke();
+    }
+  }
+
+  g.fillStyle = bodyCol;
+  roundRect(g, x - bl*0.5, bodyTop, bl, bh, bh*0.34);
+  g.fill();
+  g.strokeStyle = shade(bodyCol, -0.4);
+  g.lineWidth = 1.2*scale + 0.3;
+  g.stroke();
+
+  g.fillStyle = shade(bodyCol, -0.12);
+  roundRect(g, x - bl*0.22, bodyTop - bh*0.58, bl*0.46, bh*0.66, bh*0.26);
+  g.fill();
+  g.strokeStyle = shade(bodyCol, -0.4);
+  g.stroke();
+
+  g.fillStyle = 'rgba(150,220,255,0.55)';
+  roundRect(g, x - bl*0.17, bodyTop - bh*0.46, bl*0.36, bh*0.38, bh*0.16);
+  g.fill();
+
+  /* 前灯（眼睛） */
+  g.fillStyle = '#ffe66d';
+  g.beginPath(); g.arc(x + bl*0.46, bodyTop + bh*0.45, bh*0.17, 0, TAU); g.fill();
+  /* 瞳孔 */
+  g.fillStyle = '#1a1a1a';
+  g.beginPath(); g.arc(x + bl*0.46, bodyTop + bh*0.45, bh*0.07, 0, TAU); g.fill();
+
+  if (moving){
+    g.fillStyle = 'rgba(255,230,109,0.22)';
+    g.beginPath();
+    g.moveTo(x + bl*0.50, bodyTop + bh*0.45);
+    g.lineTo(x + bl*0.50 + 26*scale, bodyTop + bh*0.18);
+    g.lineTo(x + bl*0.50 + 26*scale, bodyTop + bh*0.75);
+    g.closePath();
+    g.fill();
+  }
+
+  /* 尾灯 */
+  g.fillStyle = '#ff6b6b';
+  g.beginPath(); g.arc(x - bl*0.47, bodyTop + bh*0.48, bh*0.13, 0, TAU); g.fill();
+
+  /* 进气格栅（嘴） */
+  g.fillStyle = '#2a2a2e';
+  roundRect(g, x + bl*0.38, bodyTop + bh*0.62, bl*0.14, bh*0.30, bh*0.08);
+  g.fill();
+  g.strokeStyle = '#8a8f96';
+  g.lineWidth = Math.max(0.8, 1*scale);
+  for (let i=1;i<3;i++){
+    const yy = bodyTop + bh*0.62 + i*bh*0.09;
+    g.beginPath();
+    g.moveTo(x + bl*0.39, yy);
+    g.lineTo(x + bl*0.51, yy);
+    g.stroke();
+  }
+
+  if (moving && Math.random() < 0.35){
+    g.fillStyle = 'rgba(200,210,200,0.30)';
+    g.beginPath();
+    g.arc(x - bl*0.60 - Math.random()*10*scale,
+          bodyTop + bh*0.60, (2 + Math.random()*3)*scale, 0, TAU);
+    g.fill();
+  }
+
+  if (isPlayer){
+    g.fillStyle = '#ffd93d';
+    g.beginPath();
+    g.moveTo(x, bodyTop - bh*1.7);
+    g.lineTo(x - 7*scale, bodyTop - bh*2.2);
+    g.lineTo(x + 7*scale, bodyTop - bh*2.2);
+    g.closePath();
+    g.fill();
+  }
+
+  if (fallen){
+    g.fillStyle = '#ffd93d';
+    g.font = 'bold '+(20*scale + 4)+'px system-ui,sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('💫', x, bodyTop - bh*1.4);
+  }
+
+  g.restore();
+}
+
+/* ============================== 绘制：鲸鱼娘 ============================== */
+const DS_BLUE   = '#4D6BFE';
+const DS_BLUE_L = '#6B8AFD';
+const DS_BLUE_D = '#3B5BDB';
+
+function drawWhaleSide(g, x, groundY, scale, h, phase, speed, isPlayer, fallen){
+  const L = h.look;
+  const bodyLen = (22 + L.bl*0.62) * scale;
+  const bodyH   = (13 + L.bw*0.55) * scale;
+  const hover   = (10 + Math.sin(phase*1.1)*3.2) * scale;
+  const cy      = groundY - hover - bodyH*0.5;
+  const moving  = speed > 1.5;
+  const spd01   = clamp(speed/18, 0, 1.2);
+
+  g.save();
+  if (fallen){
+    g.translate(x, groundY);
+    g.rotate(1.25);
+    g.translate(-x, -groundY);
+  }
+
+  g.fillStyle = 'rgba(0,0,0,0.18)';
+  g.beginPath();
+  g.ellipse(x, groundY, bodyLen*0.40, bodyH*0.18, 0, 0, TAU);
+  g.fill();
+
+  const swing = Math.sin(phase*1.5) * 0.28 * (0.5 + spd01);
+
+  g.save();
+  g.translate(x - bodyLen*0.44, cy);
+  g.rotate(swing*0.9);
+  g.fillStyle = DS_BLUE_D;
+  g.beginPath();
+  g.moveTo(0,0);
+  g.quadraticCurveTo(-bodyLen*0.22, -bodyH*0.75, -bodyLen*0.36, -bodyH*1.00);
+  g.quadraticCurveTo(-bodyLen*0.14, -bodyH*0.28, 0, 0);
+  g.closePath();
+  g.fill();
+  g.beginPath();
+  g.moveTo(0,0);
+  g.quadraticCurveTo(-bodyLen*0.22, bodyH*0.75, -bodyLen*0.36, bodyH*1.00);
+  g.quadraticCurveTo(-bodyLen*0.14, bodyH*0.28, 0, 0);
+  g.closePath();
+  g.fill();
+  g.restore();
+
+  const grad = g.createLinearGradient(0, cy-bodyH*0.7, 0, cy+bodyH*0.7);
+  grad.addColorStop(0, DS_BLUE_L);
+  grad.addColorStop(0.55, DS_BLUE);
+  grad.addColorStop(1, DS_BLUE_D);
+  g.fillStyle = grad;
+  g.beginPath();
+  g.ellipse(x, cy, bodyLen*0.5, bodyH*0.5, 0, 0, TAU);
+  g.fill();
+  g.strokeStyle = 'rgba(20,40,120,0.45)';
+  g.lineWidth = 1.1*scale;
+  g.stroke();
+
+  g.save();
+  g.beginPath(); g.ellipse(x, cy, bodyLen*0.5, bodyH*0.5, 0, 0, TAU); g.clip();
+  g.fillStyle = '#EAF0FF';
+  g.beginPath();
+  g.ellipse(x, cy + bodyH*0.34, bodyLen*0.44, bodyH*0.36, 0, 0, TAU);
+  g.fill();
+  g.strokeStyle = 'rgba(120,150,220,0.45)';
+  g.lineWidth = 1*scale;
+  for (let i=0;i<4;i++){
+    const lx = x + bodyLen*0.10 + i*bodyLen*0.075;
+    g.beginPath();
+    g.moveTo(lx, cy + bodyH*0.16);
+    g.lineTo(lx + bodyLen*0.015, cy + bodyH*0.46);
+    g.stroke();
+  }
+  g.restore();
+
+  g.fillStyle = '#5C7CFA';
+  g.beginPath();
+  g.ellipse(x - bodyLen*0.02, cy + bodyH*0.30, bodyLen*0.17, bodyH*0.17, swing*0.6, 0, TAU);
+  g.fill();
+  g.strokeStyle = 'rgba(20,40,120,0.35)';
+  g.lineWidth = 1*scale;
+  g.stroke();
+
+  /* 眼睛 */
+  const ex = x + bodyLen*0.26, ey = cy - bodyH*0.10;
+  g.fillStyle = '#ffffff';
+  g.beginPath(); g.arc(ex, ey, bodyH*0.21, 0, TAU); g.fill();
+  g.fillStyle = '#101a3a';
+  g.beginPath(); g.arc(ex + bodyH*0.045, ey, bodyH*0.125, 0, TAU); g.fill();
+  g.fillStyle = '#ffffff';
+  g.beginPath(); g.arc(ex + bodyH*0.01, ey - bodyH*0.06, bodyH*0.055, 0, TAU); g.fill();
+
+  /* 腮红 */
+  g.fillStyle = 'rgba(255,140,180,0.5)';
+  g.beginPath();
+  g.ellipse(ex - bodyH*0.24, ey + bodyH*0.24, bodyH*0.15, bodyH*0.085, 0, 0, TAU);
+  g.fill();
+
+  /* 嘴（小微笑） */
+  g.strokeStyle = 'rgba(30,50,120,0.75)';
+  g.lineWidth = Math.max(1, 1.3*scale);
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(ex - bodyH*0.08, ey + bodyH*0.42);
+  g.quadraticCurveTo(ex + bodyH*0.05, ey + bodyH*0.56, ex + bodyH*0.18, ey + bodyH*0.40);
+  g.stroke();
+
+  /* 头饰 */
+  const bx = x + bodyLen*0.10, by = cy - bodyH*0.56;
+  g.fillStyle = '#FF6BCB';
+  g.beginPath();
+  g.ellipse(bx - bodyH*0.20, by, bodyH*0.17, bodyH*0.12, -0.5, 0, TAU);
+  g.fill();
+  g.beginPath();
+  g.ellipse(bx + bodyH*0.20, by, bodyH*0.17, bodyH*0.12, 0.5, 0, TAU);
+  g.fill();
+  g.fillStyle = '#FFD93D';
+  g.beginPath();
+  g.arc(bx, by, bodyH*0.09, 0, TAU);
+  g.fill();
+
+  for (let i=0;i<3;i++){
+    const a = phase*0.9 + i*TAU/3;
+    const sx = x + Math.cos(a)*bodyLen*0.62;
+    const sy = cy + Math.sin(a)*bodyH*0.9;
+    g.fillStyle = 'rgba(160,200,255,'+(0.35 + 0.25*Math.sin(a*2))+')';
+    g.beginPath();
+    g.arc(sx, sy, 1.8*scale + Math.abs(Math.sin(a))*1.4*scale, 0, TAU);
+    g.fill();
+  }
+
+  if (isPlayer){
+    g.fillStyle = '#ffd93d';
+    g.beginPath();
+    g.moveTo(x, cy - bodyH*1.7);
+    g.lineTo(x - 7*scale, cy - bodyH*2.2);
+    g.lineTo(x + 7*scale, cy - bodyH*2.2);
+    g.closePath();
+    g.fill();
+  }
+
+  if (fallen){
+    g.fillStyle = '#ffd93d';
+    g.font = 'bold '+(20*scale + 4)+'px system-ui,sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('💫', x, cy - bodyH*1.6);
+  }
+
+  g.restore();
+}
+
+/* ============================== 统一分发 ============================== */
+function drawEntity(g, x, groundY, scale, h, phase, speed, isPlayer, fallen){
+  if (h.kind === 'car')        drawCarSide(g, x, groundY, scale, h, phase, speed, isPlayer, fallen);
+  else if (h.kind === 'whale') drawWhaleSide(g, x, groundY, scale, h, phase, speed, isPlayer, fallen);
+  else                         drawHorseSide(g, x, groundY, scale, h, phase, speed, isPlayer, fallen);
+}
+
+/* ============================== 骑手 ============================== */
+function drawRider(g, x, groundY, scale, p, time){
+  const spd = Math.hypot(p.vx, p.vy);
+  const moving = spd > 20;
+  const face = p._facing || 1;
+  const u = scale;
+
+  const ph = time * 9;
+  const bob = moving ? Math.abs(Math.sin(ph)) * 2.0 * u : Math.sin(time*2)*0.6*u;
+  const legSwing = moving ? Math.sin(ph) * 6 * u : 0;
+  const armSwing = moving ? Math.sin(ph + Math.PI) * 5 * u : 0;
+
+  g.save();
+  g.translate(x, groundY);
+
+  g.fillStyle = 'rgba(0,0,0,0.30)';
+  g.beginPath();
+  g.ellipse(0, 0, 12*u, 4.5*u, 0, 0, TAU);
+  g.fill();
+
+  g.scale(face, 1);
+  g.translate(0, -bob);
+
+  g.strokeStyle = '#2f4a6b';
+  g.lineWidth = 3.6*u;
+  g.lineCap = 'round';
+  g.beginPath(); g.moveTo(-2*u, -17*u); g.lineTo(-3.5*u - legSwing, -3*u); g.stroke();
+  g.beginPath(); g.moveTo( 2*u, -17*u); g.lineTo( 3.5*u + legSwing, -3*u); g.stroke();
+
+  g.fillStyle = '#6b4423';
+  g.beginPath(); g.ellipse(-3.5*u - legSwing, -2*u, 3.6*u, 2.0*u, 0, 0, TAU); g.fill();
+  g.beginPath(); g.ellipse( 3.5*u + legSwing, -2*u, 3.6*u, 2.0*u, 0, 0, TAU); g.fill();
+
+  g.fillStyle = '#3f6fa8';
+  roundRect(g, -6.5*u, -31*u, 13*u, 17*u, 5.5*u);
+  g.fill();
+  g.strokeStyle = '#2b4c73';
+  g.lineWidth = 1*u;
+  g.stroke();
+
+  g.fillStyle = '#d9a441';
+  g.fillRect(-6.5*u, -19*u, 13*u, 2.4*u);
+
+  g.strokeStyle = '#e8b48c';
+  g.lineWidth = 3.6*u;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(0, -27*u);
+  g.lineTo(6*u + armSwing*0.5, -19*u);
+  g.stroke();
+
+  g.fillStyle = '#e8b48c';
+  g.beginPath(); g.arc(0, -37*u, 6.8*u, 0, TAU); g.fill();
+  g.strokeStyle = 'rgba(120,80,50,0.4)';
+  g.lineWidth = 0.9*u;
+  g.stroke();
+
+  /* 眼 / 嘴 */
+  g.fillStyle = '#241a12';
+  g.beginPath(); g.arc(2.6*u, -37.8*u, 1.1*u, 0, TAU); g.fill();
+  g.strokeStyle = '#a8764f';
+  g.lineWidth = 0.9*u;
+  g.beginPath();
+  g.moveTo(1.2*u, -35.4*u);
+  g.lineTo(3.6*u, -35.4*u);
+  g.stroke();
+
+  g.fillStyle = '#d9a441';
+  g.beginPath(); g.arc(0, -40*u, 7.4*u, Math.PI, TAU); g.fill();
+  g.fillStyle = '#c39234';
+  g.beginPath(); g.ellipse(0, -40.2*u, 11.5*u, 3.2*u, 0, 0, TAU); g.fill();
+  g.fillStyle = '#b8873a';
+  g.beginPath(); g.ellipse(0, -39.4*u, 11.5*u, 2.2*u, 0, 0, TAU); g.fill();
+
+  g.restore();
+}
+
+/* ============================== 世界 & 投影 ============================== */
+const WORLD = { w: 4000, h: 4000 };
+const world = {
+  player: { x: 2000, y: 2000, vx: 0, vy: 0, angle: 0, stamina: 1, _facing: 1 },
+  horses: [], trees: [], rocks: [], grass: [],
+  cam: { x: 2000, y: 2000 },
+  time: 0, lastDt: 0.016, respawnTimer: 0
+};
+
+const G = {
+  mode: 'world', paused: false, coins: 500, stable: [],
+  lasso: null, capture: null, race: null,
+  lassoCount: 3, herbCount: 1,
+  breed: { father: null, mother: null },
+  shopTargetUid: null,
+  bet: { list: [], sel: -1, amount: 50 }
+};
+
+const CAM_ZOOM = 1.15;
+const Y_TILT   = 0.64;
+const ENT_SCALE = 1.65;
+const DRAW_SCALE = CAM_ZOOM * ENT_SCALE;
+
+function proj(wx, wy){
+  return {
+    x: W*0.5 + (wx - world.cam.x) * CAM_ZOOM,
+    y: H*0.55 + (wy - world.cam.y) * CAM_ZOOM * Y_TILT
+  };
+}
+function viewBounds(){
+  const invX = 1/CAM_ZOOM;
+  const invY = 1/(CAM_ZOOM * Y_TILT);
+  return {
+    x0: world.cam.x + (0 - W*0.5) * invX - 120,
+    x1: world.cam.x + (W - W*0.5) * invX + 120,
+    y0: world.cam.y + (0 - H*0.55) * invY - 120,
+    y1: world.cam.y + (H - H*0.55) * invY + 120
+  };
+}
+
+function buildWorld(){
+  world.trees.length = 0;
+  world.rocks.length = 0;
+  world.grass.length = 0;
+  for (let i=0;i<420;i++)
+    world.trees.push({ x: rnd(120,WORLD.w-120), y: rnd(120,WORLD.h-120), r: rnd(24,46), dark: Math.random()<0.4 });
+  for (let i=0;i<260;i++)
+    world.rocks.push({ x: rnd(80,WORLD.w-80), y: rnd(80,WORLD.h-80), r: rnd(7,18) });
+  for (let i=0;i<2200;i++)
+    world.grass.push({ x: rnd(0,WORLD.w), y: rnd(0,WORLD.h), h: rnd(5,14), a: rnd(-0.5,0.5) });
+  world.horses.length = 0;
+  for (let i=0;i<18;i++) spawnWildHorse(true);
+}
+
+function spawnWildHorse(far){
+  let x, y, tries = 0;
+  do {
+    x = rnd(240, WORLD.w-240);
+    y = rnd(240, WORLD.h-240);
+    tries++;
+  } while (Math.hypot(x-world.player.x, y-world.player.y) < (far?520:900) && tries < 100);
+
+  const roll = Math.random();
+  const kind = roll < 0.10 ? 'car' : (roll < 0.19 ? 'whale' : 'horse');
+
+  const h = makeHorse(kind);
+  h.x = x; h.y = y; h.vx = 0; h.vy = 0;
+  h._facing = Math.random() < 0.5 ? -1 : 1;
+  h.state = 'graze'; h.stateT = rnd(1,4);
+  h.wander = rnd(0,TAU); h.run = 1;
+  h.legPhase = rnd(0,10); h.bob = rnd(0,10);
+  world.horses.push(h);
+  return h;
+}
+
+function updateWildHorse(h, dt){
+  const p = world.player;
+  const d = Math.hypot(p.x-h.x, p.y-h.y);
+  const M = moveStyleOf(h.look.shape);
+  const kindSpd = h.kind === 'car' ? 1.45 : (h.kind === 'whale' ? 0.72 : 1);
+
+  if (h.frozen){ h.legPhase += dt*6; return; }
+
+  if (d < 330) h.state = 'flee';
+
+  if (h.state === 'flee'){
+    h.run = Math.max(0, h.run - dt*0.26);
+    const sp = (105 + 155*h.run) * M.speed * kindSpd;
+    const ang = Math.atan2(h.y-p.y, h.x-p.x) + Math.sin(h.bob + world.time*2)*0.12;
+    h.vx = Math.cos(ang)*sp;
+    h.vy = Math.sin(ang)*sp;
+    if (d > 540){ h.state = 'graze'; h.stateT = rnd(1,3); }
+  } else {
+    h.run = Math.min(1, h.run + dt*0.14);
+    h.stateT -= dt;
+    if (h.stateT <= 0){
+      h.stateT = rnd(1.5,4.5);
+      h.wander = rnd(0,TAU);
+      h.state = Math.random()<0.35 ? 'trot' : 'graze';
+    }
+    const sp = (h.state==='trot' ? 58 : 22) * M.speed * kindSpd;
+    h.vx = Math.cos(h.wander)*sp;
+    h.vy = Math.sin(h.wander)*sp;
+  }
+
+  h.x = clamp(h.x + h.vx*dt, 60, WORLD.w-60);
+  h.y = clamp(h.y + h.vy*dt, 60, WORLD.h-60);
+  if (h.x <= 62 || h.x >= WORLD.w-62) h.wander = Math.PI - h.wander;
+  if (h.y <= 62 || h.y >= WORLD.h-62) h.wander = -h.wander;
+
+  h.legPhase += dt * (4 + Math.hypot(h.vx,h.vy)*0.09) * M.legSpeed;
+
+  if (h.vx < -2) h._facing = -1;
+  else if (h.vx > 2) h._facing = 1;
+}
+
+/* ============================== 玩家控制 ============================== */
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.code === 'Space'){
+    e.preventDefault();
+    if (G.capture && !G.capture.done) tapCapture();
+  }
+});
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+function updatePlayer(dt){
+  const p = world.player;
+  let ix=0, iy=0;
+  if (keys['w']||keys['arrowup']) iy -= 1;
+  if (keys['s']||keys['arrowdown']) iy += 1;
+  if (keys['a']||keys['arrowleft']) ix -= 1;
+  if (keys['d']||keys['arrowright']) ix += 1;
+  const len = Math.hypot(ix,iy);
+  if (len>0){ ix/=len; iy/=len; }
+
+  const wantSprint = keys['shift'] && p.stamina > 0.05;
+  const sp = wantSprint ? 340 : 205;
+  if (wantSprint) p.stamina = Math.max(0, p.stamina - dt*0.32);
+  else p.stamina = Math.min(1, p.stamina + dt*0.18);
+
+  const tx = ix*sp, ty = iy*sp;
+  const k = 1 - Math.pow(0.0005, dt);
+  p.vx = lerp(p.vx, tx, k);
+  p.vy = lerp(p.vy, ty, k);
+  p.x = clamp(p.x + p.vx*dt, 40, WORLD.w-40);
+  p.y = clamp(p.y + p.vy*dt, 40, WORLD.h-40);
+  if (Math.hypot(p.vx,p.vy) > 10) p.angle = Math.atan2(p.vy, p.vx);
+
+  if (p.vx < -8) p._facing = -1;
+  else if (p.vx > 8) p._facing = 1;
+}
+
+/* ============================== 套索 / 捕捉 ============================== */
+function nearestHorse(maxD){
+  const p = world.player;
+  let best = null, bd = maxD;
+  for (let i=0;i<world.horses.length;i++){
+    const h = world.horses[i];
+    const d = Math.hypot(h.x-p.x, h.y-p.y);
+    if (d < bd){ bd = d; best = h; }
+  }
+  return best;
+}
+function tryThrowLasso(){
+  if (G.lasso || G.capture) return;
+  if (G.lassoCount <= 0){
+    toast('🪢 套索用完了！去商店买一些吧（100 金币 / 个）', 2000);
+    return;
+  }
+  const target = nearestHorse(260);
+  if (!target){ toast('附近没有目标，先追上去！'); return; }
+  G.lassoCount--;
+  updateHUD();
+  G.lasso = { target: target, t:0, dur:0.2 };
+}
+function updateLasso(dt){
+  if (!G.lasso) return;
+  G.lasso.t += dt;
+  if (G.lasso.t >= G.lasso.dur){
+    startCapture(G.lasso.target);
+    G.lasso = null;
+  }
+}
+function startCapture(h){
+  h.frozen = true;
+  G.capture = { horse: h, meter: 0, time: 0, dur: 2.6, done: false };
+  document.getElementById('capUI').classList.remove('hidden');
+  document.getElementById('capFill').style.width = '0%';
+}
+function tapCapture(){
+  const c = G.capture;
+  if (!c || c.done) return;
+  c.meter = Math.max(0, c.meter - 6);
+}
+function updateCapture(dt){
+  const c = G.capture;
+  if (!c || c.done) return;
+  c.time += dt;
+  const g = effGenes(c.horse);
+  c.meter += (30 + g.muscle*0.55) * dt;
+  document.getElementById('capFill').style.width = clamp(c.meter,0,100)+'%';
+  if (c.meter >= 100){ c.done = true; finishCapture(false); }
+  else if (c.time >= c.dur){ c.done = true; finishCapture(true); }
+}
+function finishCapture(success){
+  const c = G.capture;
+  const h = c.horse;
+  if (success){
+    h.frozen = false;
+    world.horses = world.horses.filter(x => x !== h);
+    delete h.x; delete h.y; delete h.vx; delete h.vy; delete h.frozen;
+    delete h.state; delete h.stateT; delete h.wander; delete h.run;
+    delete h.legPhase; delete h.bob; delete h._facing;
+    G.stable.push(h);
+    updateHUD();
+    if (h.kind === 'car'){
+      toast('🚗 彩蛋捕获「'+h.name+'」！'+pick(['你把它开回了马厩（？）','钥匙还在上面，赚到了','它冒了个烟圈表示同意']), 2200);
+    } else if (h.kind === 'whale'){
+      toast('🐋 彩蛋捕获「'+h.name+'」！'+pick(['她吐了个泡泡跟你走','她把你当成了饲养员','她浮在你头顶转了三圈']), 2200);
+    } else {
+      toast('🎉 捕获「'+h.name+'」！'+pick([
+        '它瞪了你一眼，然后认命了。','它叹了口气，决定跟你混。',
+        '它似乎在想：至少包吃住。','它舔了舔你的帽子。',
+        '它开始盘算怎么吃穷你。','它原地转了三圈，表示同意。'
+      ]), 2000);
+    }
+  } else {
+    h.frozen = false; h.state = 'flee'; h.run = 1;
+    toast('💨 「'+h.name+'」挣脱了套索，跑了！', 1800);
+  }
+  setTimeout(() => {
+    G.capture = null;
+    document.getElementById('capUI').classList.add('hidden');
+  }, 700);
+}
+
+/* ============================== 世界渲染 ============================== */
+function renderWorld(){
+  const p = world.player;
+
+  const k = 1 - Math.pow(0.0001, world.lastDt || 0.016);
+  world.cam.x = lerp(world.cam.x, p.x, k);
+  world.cam.y = lerp(world.cam.y, p.y, k);
+  world.cam.x = clamp(world.cam.x, 0, WORLD.w);
+  world.cam.y = clamp(world.cam.y, 0, WORLD.h);
+
+  const vb = viewBounds();
+
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#0d1f16');
+  bg.addColorStop(0.35, '#16281c');
+  bg.addColorStop(1, '#1d3624');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const gTop = proj(0, 0).y;
+  const gBot = proj(0, WORLD.h).y;
+  ctx.fillStyle = '#2f4d33';
+  ctx.fillRect(0, gTop, W, gBot - gTop);
+
+  ctx.strokeStyle = 'rgba(150,205,150,0.26)';
+  ctx.lineWidth = 1.6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (let i=0;i<world.grass.length;i++){
+    const gr = world.grass[i];
+    if (gr.x < vb.x0 || gr.x > vb.x1 || gr.y < vb.y0 || gr.y > vb.y1) continue;
+    const sp = proj(gr.x, gr.y);
+    if (sp.y < gTop - 20 || sp.y > gBot + 20) continue;
+    ctx.moveTo(sp.x, sp.y);
+    ctx.lineTo(sp.x + Math.sin(gr.a)*gr.h*CAM_ZOOM*0.5,
+               sp.y - gr.h*CAM_ZOOM*Y_TILT*0.9);
+  }
+  ctx.stroke();
+
+  const tl = proj(0,0), tr = proj(WORLD.w,0), bl = proj(0,WORLD.h);
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(Math.min(tl.x,bl.x), Math.min(tl.y,tr.y),
+                 Math.abs(tr.x-tl.x), Math.abs(bl.y-tl.y));
+
+  const list = [];
+
+  for (let i=0;i<world.trees.length;i++){
+    const t = world.trees[i];
+    if (t.x < vb.x0 || t.x > vb.x1 || t.y < vb.y0 || t.y > vb.y1) continue;
+    list.push({ y: t.y, type:'tree', obj: t });
+  }
+  for (let i=0;i<world.rocks.length;i++){
+    const r = world.rocks[i];
+    if (r.x < vb.x0 || r.x > vb.x1 || r.y < vb.y0 || r.y > vb.y1) continue;
+    list.push({ y: r.y, type:'rock', obj: r });
+  }
+  for (let i=0;i<world.horses.length;i++){
+    const h = world.horses[i];
+    if (h.x < vb.x0 || h.x > vb.x1 || h.y < vb.y0 || h.y > vb.y1) continue;
+    list.push({ y: h.y, type:'ent', obj: h });
+  }
+  list.push({ y: p.y, type:'player', obj: p });
+
+  list.sort(function(a,b){ return a.y - b.y; });
+
+  for (let i=0;i<list.length;i++){
+    const it = list[i];
+    const sp = proj(it.obj.x, it.obj.y);
+    if (sp.x < -320 || sp.x > W + 320 || sp.y < -320 || sp.y > H + 320) continue;
+
+    if (it.type === 'tree'){
+      const s = DRAW_SCALE;
+      const r = it.obj.r * s;
+      ctx.fillStyle = 'rgba(0,0,0,0.26)';
+      ctx.beginPath();
+      ctx.ellipse(sp.x, sp.y, r*0.70, r*0.24, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = '#3d2b1a';
+      ctx.fillRect(sp.x - r*0.11, sp.y - r*1.15, r*0.22, r*1.15);
+      ctx.fillStyle = it.obj.dark ? '#24502c' : '#2f6a3a';
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y - r*1.15 - r*0.52, r*0.86, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = it.obj.dark ? '#316b3c' : '#468a4f';
+      ctx.beginPath();
+      ctx.arc(sp.x - r*0.24, sp.y - r*1.15 - r*0.76, r*0.50, 0, TAU);
+      ctx.fill();
+
+    } else if (it.type === 'rock'){
+      const s = DRAW_SCALE;
+      const r = it.obj.r * s;
+      ctx.fillStyle = 'rgba(0,0,0,0.24)';
+      ctx.beginPath();
+      ctx.ellipse(sp.x, sp.y, r, r*0.34, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = '#6b6f68';
+      ctx.beginPath();
+      ctx.ellipse(sp.x, sp.y - r*0.46, r, r*0.78, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = '#878c84';
+      ctx.beginPath();
+      ctx.ellipse(sp.x - r*0.28, sp.y - r*0.70, r*0.44, r*0.32, 0, 0, TAU);
+      ctx.fill();
+
+    } else if (it.type === 'ent'){
+      const h = it.obj;
+      const spd = Math.hypot(h.vx, h.vy);
+      const face = (h._facing === -1) ? -1 : 1;
+      ctx.save();
+      try {
+        if (face === -1){
+          ctx.translate(sp.x, 0);
+          ctx.scale(-1, 1);
+          ctx.translate(-sp.x, 0);
+        }
+        drawEntity(ctx, sp.x, sp.y, DRAW_SCALE, h, h.legPhase, spd, false, !!h.frozen);
+      } finally {
+        ctx.restore();
+      }
+
+    } else {
+      drawRider(ctx, sp.x, sp.y, DRAW_SCALE * 0.86, p, world.time);
+    }
+  }
+
+  if (!G.capture && !G.lasso){
+    const target = nearestHorse(260);
+    if (target){
+      const tp = proj(target.x, target.y);
+      ctx.strokeStyle = 'rgba(255,217,61,0.65)';
+      ctx.lineWidth = 2.4;
+      ctx.setLineDash([6,7]);
+      ctx.beginPath();
+      ctx.ellipse(tp.x, tp.y, 42 + Math.sin(world.time*4)*4, 15 + Math.sin(world.time*4)*1.5, 0, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  if (G.lasso){
+    const L = G.lasso;
+    const kk = clamp(L.t/L.dur, 0, 1);
+    const ease = 1 - Math.pow(1-kk, 3);
+    const ps = proj(world.player.x, world.player.y);
+    const ts = proj(L.target.x, L.target.y);
+    const ex = lerp(ps.x, ts.x, ease);
+    const ey = lerp(ps.y, ts.y, ease);
+    ctx.strokeStyle = 'rgba(255,217,61,0.9)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8,6]);
+    ctx.beginPath();
+    ctx.moveTo(ps.x, ps.y - 40*DRAW_SCALE*0.4);
+    ctx.lineTo(ex, ey - 20*DRAW_SCALE*0.4);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = '#ffd93d';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.ellipse(ex, ey - 20*DRAW_SCALE*0.4, 22, 9, 0, 0, TAU);
+    ctx.stroke();
+  }
+
+  const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.38, W/2, H/2, Math.max(W,H)*0.80);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.52)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,W,H);
+
+  drawStaminaBar();
+  drawRadar();
+}
+
+function drawStaminaBar(){
+  const p = world.player;
+  const w=110, h=7, x=14, y=H-30;
+  ctx.save();
+  roundRect(ctx,x,y,w,h,4);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fill();
+  roundRect(ctx,x,y,Math.max(0.5,w*clamp(p.stamina,0,1)),h,4);
+  const g = ctx.createLinearGradient(x,0,x+w,0);
+  g.addColorStop(0,'#5fd17a');
+  g.addColorStop(1,'#ffd93d');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.fillStyle = 'rgba(200,220,210,0.7)';
+  ctx.font = 'bold 10px system-ui,sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('体力', x, y-3);
+  ctx.restore();
+}
+
+function drawRadar(){
+  const size=108, pad=14;
+  const x = W-size-pad, y = H-size-pad;
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  roundRect(ctx,x,y,size,size,12);
+  ctx.fillStyle = 'rgba(6,18,12,0.72)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const sx = size/WORLD.w, sy = size/WORLD.h;
+  for (let i=0;i<world.horses.length;i++){
+    const h = world.horses[i];
+    ctx.fillStyle = h.kind === 'car' ? '#ffb347' : (h.kind === 'whale' ? '#8fa8ff' : '#c8ddd2');
+    ctx.beginPath();
+    ctx.arc(x + h.x*sx, y + h.y*sy, 2.6, 0, TAU);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(x + world.player.x*sx, y + world.player.y*sy, 3.6, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ============================== 比赛 ============================== */
+const PXU = 9;
+const RACE_LEN = 120;
+const MAX_RACES = 2;
+
+function startRace(playerHorse){
+  if (G.race) return;
+  if ((playerHorse.raceCount || 0) >= MAX_RACES){
+    toast('🏁 「'+playerHorse.name+'」已经跑满 2 场啦，让它休息吧', 2000);
+    return;
+  }
+  const entries = [playerHorse];
+  for (let i=0;i<3;i++) entries.push(makeHorse('horse'));
+  const lanes = [0,1,2,3].sort(function(){ return Math.random()-0.5; });
+
+  const horses = [];
+  for (let i=0;i<entries.length;i++){
+    horses.push({
+      data: entries[i], lane: lanes[i],
+      x: 0, v: 0, legPhase: Math.random()*10, fatigue: 0,
+      finished: false, finishTime: 0, isPlayer: i===0,
+      reaction: 0.15 + Math.random()*0.35,
+      noiseSeed: Math.random()*100,
+      fallen: false, fallTimer: 0, fallCount: 0,
+      _facing: 1
+    });
+  }
+  G.race = { horses: horses, time: 0, countdown: 2.6, ended: false, holdStarted: null };
+  G.mode = 'race';
+  G.paused = false;
+  document.getElementById('tip').textContent = '全程自动奔跑，看谁能冲线！';
+}
+
+function updateRacer(r, dt){
+  const g = effGenes(r.data);
+  const M = moveStyleOf(r.data.look.shape);
+  const R = G.race;
+  if (R.time < r.reaction) return;
+
+  if (r.fallen){
+    r.fallTimer -= dt;
+    r.v *= Math.pow(0.1, dt);
+    r.x += r.v * dt;
+    if (r.fallTimer <= 0){
+      r.fallen = false;
+      r.fatigue += 0.06;
+    }
+    return;
+  }
+
+  const t = R.time;
+  const kindSpd = r.data.kind === 'car' ? 1.12 : (r.data.kind === 'whale' ? 0.9 : 1);
+  const fatigueFactor = 1 - 0.42 * clamp(r.fatigue, 0, 1);
+
+  let thrust = 0.55 * g.muscle * (0.6 + 0.8 * g.legLength) * fatigueFactor;
+  thrust *= M.speed * kindSpd;
+
+  if (g.temper === 'wild') thrust *= 1 + Math.sin(t*3.1 + r.noiseSeed)*0.09;
+  else if (g.temper === 'lazy') thrust *= t < 3.2 ? 0.84 : 1.05;
+  else if (g.temper === 'calm') thrust *= 1 + Math.sin(t*1.7 + r.noiseSeed)*0.02;
+
+  thrust *= 1 + (g.luck/100)*0.05*Math.sin(t*5 + r.noiseSeed*3);
+
+  const drag = 0.00055 * g.weight * r.v * r.v + 0.45 * r.v;
+  const a = (thrust - drag) / (g.weight * 0.03);
+  r.v = Math.max(0, r.v + a*dt);
+  r.x += r.v * dt;
+  r.legPhase += dt * (2.0 + r.v * 0.6) * M.legSpeed;
+
+  const stamFactor = 110 / (g.stamina + 40);
+  r.fatigue += dt * r.v * 0.0016 * stamFactor;
+
+  const weirdFrac = clamp(r.data.weirdness / 18, 0, 1);
+  const balanceFactor = clamp(1 - g.balance/100, 0, 1);
+  const speedFactor = clamp(r.v / 20, 0, 1.2);
+  const fallChance = (balanceFactor * 0.55 + weirdFrac * 0.30) * speedFactor * dt * 1.1;
+  if (Math.random() < fallChance && r.x < RACE_LEN - 3){
+    r.fallen = true;
+    r.fallCount++;
+    r.fallTimer = 1.2 + Math.random() * 1.6;
+    if (r.isPlayer) toast('💫 你的马摔倒了！', 900);
+  }
+
+  if (r.x >= RACE_LEN){
+    r.x = RACE_LEN;
+    r.finished = true;
+    r.finishTime = R.time;
+  }
+}
+
+function updateRace(dt){
+  const R = G.race;
+  if (!R || R.ended) return;
+  if (R.countdown > 0){ R.countdown -= dt; return; }
+  R.time += dt;
+
+  let ply = null;
+  for (let i=0;i<R.horses.length;i++) if (R.horses[i].isPlayer) ply = R.horses[i];
+
+  let allDone = true;
+  for (let i=0;i<R.horses.length;i++){
+    const r = R.horses[i];
+    if (r.finished) continue;
+    allDone = false;
+    updateRacer(r, dt);
+  }
+
+  if (ply && ply.finished && R.holdStarted === null) R.holdStarted = R.time;
+  if (R.holdStarted !== null && R.time - R.holdStarted > 4){
+    for (let i=0;i<R.horses.length;i++){
+      const r = R.horses[i];
+      if (!r.finished){
+        r.finished = true;
+        r.finishTime = 900 + (RACE_LEN - r.x) * 0.1;
+      }
+    }
+    allDone = true;
+  }
+  if (R.time > 70){
+    for (let i=0;i<R.horses.length;i++){
+      const r = R.horses[i];
+      if (!r.finished){
+        r.finished = true;
+        r.finishTime = 950 + (RACE_LEN - r.x) * 0.1;
+      }
+    }
+    allDone = true;
+  }
+  if (allDone && !R.ended){ R.ended = true; endRace(); }
+}
+
+function endRace(){
+  const R = G.race;
+  const sorted = R.horses.slice().sort(function(a,b){ return a.finishTime - b.finishTime; });
+  let playerIdx = 0;
+  for (let i=0;i<sorted.length;i++) if (sorted[i].isPlayer) playerIdx = i;
+  const rank = playerIdx + 1;
+  const prizeTable = [400, 200, 110, 60];
+  const prize = prizeTable[playerIdx] !== undefined ? prizeTable[playerIdx] : 30;
+  G.coins += prize;
+
+  const pm = sorted[playerIdx].data;
+  pm.raceCount = (pm.raceCount || 0) + 1;
+  if (rank === 1) pm.wins = (pm.wins || 0) + 1;
+  updateHUD();
+  showResult(sorted, rank, prize);
+}
+
+function showResult(sorted, rank, prize){
+  const body = document.getElementById('resultBody');
+  const medals = ['🥇','🥈','🥉','4️⃣'];
+  const titles = ['冲线夺冠！','屈居亚军','拿下季军','下次一定'];
+  let html = '<div class="big">'+medals[rank-1]+' 第 '+rank+' 名</div>' +
+    '<div class="sub">'+(titles[rank-1]||'')+'　获得 🪙 '+prize+'</div><div class="plist">';
+  for (let i=0;i<sorted.length;i++){
+    const r = sorted[i];
+    const t = r.finishTime >= 900 ? '未完赛' : r.finishTime.toFixed(2)+'s';
+    const fallTxt = r.fallCount > 0 ? '　摔倒'+r.fallCount+'次' : '';
+    const rc = r.data.raceCount || 0;
+    const raceTxt = '　(' + rc + '/' + MAX_RACES + '场)';
+    html += '<div class="prow '+(r.isPlayer?'me':'')+'">' +
+      '<span class="place">'+(medals[i]||(i+1))+'</span>' +
+      '<span class="pn">'+r.data.name+(r.isPlayer?' (你)':'')+fallTxt+'</span>' +
+      '<span class="pt">'+t+raceTxt+'</span></div>';
+  }
+  html += '</div>';
+  body.innerHTML = html;
+  document.getElementById('resultOverlay').classList.remove('hidden');
+  G.paused = true;
+}
+
+function renderRace(){
+  const R = G.race;
+  if (!R) return;
+
+  const sky = ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#08131f');
+  sky.addColorStop(0.42,'#12304a');
+  sky.addColorStop(0.72,'#1d4d2e');
+  sky.addColorStop(1,'#276237');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0,0,W,H);
+
+  ctx.fillStyle = 'rgba(12,40,30,0.75)';
+  ctx.beginPath();
+  ctx.moveTo(-50, H*0.32);
+  for (let i=0;i<=12;i++){
+    const px = -50 + (W+100)*i/12;
+    const py = H*0.32 - Math.sin(i*1.7)*26 - Math.sin(i*0.6)*18;
+    ctx.lineTo(px, py);
+  }
+  ctx.lineTo(W+50, H*0.5);
+  ctx.lineTo(-50, H*0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  const top = H*0.24, bottom = H*0.95;
+  const laneGap = (bottom - top) / 4;
+  const groundYs = [0,1,2,3].map(function(i){ return top + laneGap*(i+1); });
+
+  const sc = clamp(Math.min(W/860, H/560), 0.75, 1.35);
+  const startX = 150;
+  const totalPx = startX + RACE_LEN*PXU + 150;
+
+  let camX;
+  if (totalPx > W){
+    let lead = 0;
+    for (let i=0;i<R.horses.length;i++) lead = Math.max(lead, R.horses[i].x);
+    camX = clamp(startX + lead*PXU - W*0.5, 0, totalPx - W);
+  } else {
+    camX = -(W - totalPx)/2;
+  }
+
+  ctx.save();
+  ctx.translate(-camX, 0);
+  const wl = camX-100, wr = camX+W+100;
+
+  ctx.fillStyle = '#1c4126';
+  ctx.fillRect(wl, groundYs[0]-laneGap*0.55, wr-wl, H+200);
+
+  for (let i=0;i<4;i++){
+    const gy = groundYs[i];
+    ctx.fillStyle = i%2 ? 'rgba(255,255,255,0.045)' : 'rgba(0,0,0,0.10)';
+    ctx.fillRect(wl, gy-laneGap*0.55, wr-wl, laneGap);
+    ctx.strokeStyle = 'rgba(190,255,190,0.14)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(wl, gy);
+    ctx.lineTo(wr, gy);
+    ctx.stroke();
+  }
+
+  const trackTop = groundYs[0]-laneGap*0.55;
+  const trackBottom = groundYs[3]+laneGap*0.45;
+
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.fillRect(startX-3, trackTop, 6, trackBottom-trackTop);
+
+  const finishX = startX + RACE_LEN*PXU;
+  const cell = 14;
+  let row = 0;
+  for (let y=trackTop; y<trackBottom; y+=cell, row++){
+    for (let c=0;c<2;c++){
+      ctx.fillStyle = (row+c)%2 ? '#f2f2f2' : '#1a1a1a';
+      ctx.fillRect(finishX - cell + c*cell, y, cell, Math.min(cell, trackBottom-y));
+    }
+  }
+
+  const ordered = R.horses.slice().sort(function(a,b){ return a.lane - b.lane; });
+
+  for (let i=0;i<ordered.length;i++){
+    const r = ordered[i];
+    const px = startX + r.x*PXU;
+    const speed = r.v;
+    drawEntity(ctx, px, groundYs[r.lane], sc, r.data, r.legPhase, speed, r.isPlayer, r.fallen);
+    ctx.font = 'bold '+Math.round(14*sc)+'px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = r.isPlayer ? '#ffd93d' : 'rgba(215,238,226,0.78)';
+    ctx.fillText(r.data.name, px, groundYs[r.lane] - 92*sc);
+  }
+
+  ctx.restore();
+
+  let myRank = 1;
+  const sortedNow = R.horses.slice().sort(function(a,b){ return b.x - a.x; });
+  for (let i=0;i<sortedNow.length;i++) if (sortedNow[i].isPlayer) myRank = i+1;
+
+  let ply = null;
+  for (let i=0;i<R.horses.length;i++) if (R.horses[i].isPlayer) ply = R.horses[i];
+
+  ctx.save();
+  roundRect(ctx, W/2-96, 14, 192, 46, 14);
+  ctx.fillStyle = 'rgba(6,18,12,0.7)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#e8f2ec';
+  ctx.font = '900 20px system-ui,sans-serif';
+  ctx.fillText(R.time.toFixed(1)+'s', W/2-40, 38);
+  ctx.fillStyle = myRank === 1 ? '#ffd93d' : '#9fb8aa';
+  ctx.font = '900 18px system-ui,sans-serif';
+  ctx.fillText('第 '+myRank+' 名', W/2+46, 38);
+  ctx.restore();
+
+  const barW = Math.min(W-60, 560);
+  const barX = (W-barW)/2, barY = 74;
+  roundRect(ctx, barX, barY, barW, 8, 4);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fill();
+  for (let i=0;i<R.horses.length;i++){
+    const r = R.horses[i];
+    const t = clamp(r.x/RACE_LEN, 0, 1);
+    ctx.fillStyle = r.isPlayer ? '#ffd93d' : 'rgba(120,220,180,0.85)';
+    ctx.beginPath();
+    ctx.arc(barX + barW*t, barY+4, r.isPlayer?5.5:4, 0, TAU);
+    ctx.fill();
+  }
+
+  if (R.countdown > 0){
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0,0,W,H);
+    const n = Math.ceil(R.countdown);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffd93d';
+    ctx.font = '900 110px system-ui,sans-serif';
+    ctx.fillText(n<=0 ? 'GO!' : String(n), W/2, H/2-20);
+    ctx.fillStyle = 'rgba(200,220,210,0.75)';
+    ctx.font = '700 16px system-ui,sans-serif';
+    ctx.fillText('准备起跑……', W/2, H/2+70);
+    ctx.restore();
+  }
+
+  if (ply){
+    const w=200, h=10, x=(W-w)/2, y=H-34;
+    roundRect(ctx,x,y,w,h,5);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fill();
+    roundRect(ctx,x,y,Math.max(0.5,w*clamp(1-ply.fatigue,0,1)),h,5);
+    const g2 = ctx.createLinearGradient(x,0,x+w,0);
+    g2.addColorStop(0,'#5fd17a');
+    g2.addColorStop(1,'#ffd93d');
+    ctx.fillStyle = g2;
+    ctx.fill();
+    ctx.fillStyle = 'rgba(200,220,210,0.7)';
+    ctx.font = 'bold 11px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('体力（自动奔跑）', W/2, y-4);
+  }
+}
+
+/* ============================== 基础 UI ============================== */
+let toastTimer = null;
+function toast(msg, ms){
+  ms = ms || 1700;
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, ms);
+}
+
+function updateHUD(){
+  document.getElementById('uiCoins').textContent = G.coins;
+  document.getElementById('uiCount').textContent = G.stable.length;
+  let totalWins = 0;
+  for (let i=0;i<G.stable.length;i++) totalWins += (G.stable[i].wins||0);
+  document.getElementById('uiWins').textContent = totalWins;
+  document.getElementById('uiLasso').textContent = G.lassoCount;
+  document.getElementById('uiHerb').textContent = G.herbCount;
+}
+
+function renderHorseThumb(canvas, h){
+  const dpr = 2;
+  canvas.width = 104*dpr;
+  canvas.height = 72*dpr;
+  const g = canvas.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  const bg = g.createLinearGradient(0,0,0,72);
+  bg.addColorStop(0,'rgba(255,255,255,0.06)');
+  bg.addColorStop(1, rgba(h.look.coat, 0.18));
+  g.fillStyle = bg;
+  g.fillRect(0,0,104,72);
+  g.fillStyle = 'rgba(0,0,0,0.28)';
+  g.fillRect(0,62,104,10);
+  drawEntity(g, 52, 64, 0.62, h, 0, 0, false, false);
+}
+
+/* ============================== 马厩 ============================== */
+function renderStable(){
+  const grid = document.getElementById('stableGrid');
+  grid.innerHTML = '';
+  document.getElementById('stableSub').textContent = '共 ' + G.stable.length + ' 匹';
+  if (!G.stable.length){
+    grid.innerHTML = '<div class="empty"><div class="big">🐴</div>' +
+      '马厩空空如也<br>去原野上套几匹野马吧！</div>';
+    return;
+  }
+  const list = G.stable.slice().sort(function(a,b){ return horsePower(b) - horsePower(a); });
+
+  for (let idx=0; idx<list.length; idx++){
+    const h = list[idx];
+    const g = effGenes(h);
+    const price = horsePrice(h);
+    const bal = balanceLabel(g.balance);
+    const M = moveStyleOf(h.look.shape);
+    const raceLeft = MAX_RACES - (h.raceCount || 0);
+
+    const card = document.createElement('div');
+    card.className = 'hcard';
+
+    const legPct = Math.round(clamp(g.legLength/2.6*100, 3, 100));
+    const hPct = Math.round(clamp(g.height/3.4*100, 3, 100));
+
+    function bar(label, val, color){
+      return '<div class="srow"><span class="lb">'+label+'</span>' +
+        '<span class="sbar"><span class="sfill" style="width:'+clamp(val,3,100)+'%;background:'+color+'"></span></span>' +
+        '<span class="sval">'+Math.round(val)+'</span></div>';
+    }
+
+    const raceBtnDisabled = raceLeft <= 0;
+    const raceBtnLabel = raceBtnDisabled
+      ? '⛔ 已跑满 '+MAX_RACES+' 场'
+      : '🏁 参赛 (' + (h.raceCount||0) + '/' + MAX_RACES + ')';
+
+    const kindTag = h.kind !== 'horse'
+      ? '<span class="ktag">'+KIND_LABEL[h.kind]+' 彩蛋</span>' : '';
+    const genTag = h.generation > 1
+      ? '<span class="gtag gen">第'+h.generation+'代</span>' : '';
+    const genTag2 = h.gender
+      ? '<span class="gtag '+(h.gender==='male'?'male':'female')+'">'+GENDER_LABEL[h.gender]+'</span>' : '';
+
+    card.innerHTML =
+      '<div class="hcard-top">' +
+        '<canvas></canvas>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="hname">' +
+            '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h.name+'</span>' +
+            kindTag + genTag2 + genTag +
+            '<span class="rtag">'+weirdLabel(h.weirdness)+'</span>' +
+            '<span class="'+ageTagClass(h.age)+'">'+h.age+'岁 · '+ageLabel(h.age)+'</span>' +
+          '</div>' +
+          '<div class="gene">' +
+            '身高 <b>'+g.height.toFixed(2)+'</b>　腿长 <b>'+g.legLength.toFixed(2)+'</b><br>' +
+            '体重 <b>'+g.weight+'kg</b>　性格 <b>'+TEMPER_NAME[g.temper]+'</b><br>' +
+            '平衡 <b style="color:'+bal.color+'">'+bal.text+'</b>　胜场 <b>'+(h.wins||0)+'</b>　参赛 <b>'+(h.raceCount||0)+'/'+MAX_RACES+'</b><br>' +
+            '步伐 <b style="color:#b197fc">'+M.label+'</b>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      bar('肌肉', g.muscle, 'linear-gradient(90deg,#ff8a5c,#ffd93d)') +
+      bar('耐力', g.stamina, 'linear-gradient(90deg,#4dabf7,#63e6be)') +
+      bar('平衡', g.balance, 'linear-gradient(90deg,'+bal.color+','+bal.color+')') +
+      bar('幸运', g.luck, 'linear-gradient(90deg,#b197fc,#ffd93d)') +
+      bar('身高', hPct, 'linear-gradient(90deg,#63e6be,#4dabf7)') +
+      bar('腿长', legPct, 'linear-gradient(90deg,#63e6be,#4dabf7)') +
+      '<div class="acts">' +
+        '<button class="btn small act-race"'+(raceBtnDisabled?' disabled':'')+'>'+raceBtnLabel+'</button>' +
+        '<button class="btn small red act-sell">💰 卖 '+price+'</button>' +
+      '</div>';
+
+    grid.appendChild(card);
+    renderHorseThumb(card.querySelector('canvas'), h);
+
+    card.querySelector('.act-race').onclick = function(){
+      if (raceLeft <= 0){
+        toast('⛔ 「'+h.name+'」已经跑满 '+MAX_RACES+' 场啦', 1800);
+        return;
+      }
+      document.getElementById('stableOverlay').classList.add('hidden');
+      G.paused = false;
+      startRace(h);
+    };
+    card.querySelector('.act-sell').onclick = function(){
+      G.coins += price;
+      G.stable = G.stable.filter(function(x){ return x !== h; });
+      updateHUD();
+      renderStable();
+      toast('💰 卖出「'+h.name+'」，获得 '+price+' 金币', 1500);
+    };
+  }
+}
+
+/* ============================== 育马场 ============================== */
+function renderBreed(){
+  const grid = document.getElementById('breedGrid');
+  grid.innerHTML = '';
+  document.getElementById('breedSub').textContent =
+    '灵草 ' + G.herbCount + ' 株　共有 ' + G.stable.length + ' 匹马';
+
+  const maleSlot = document.getElementById('slotMale');
+  const femaleSlot = document.getElementById('slotFemale');
+  const f = G.breed.father, m = G.breed.mother;
+
+  maleSlot.className = 'bslot' + (f ? ' filled' : '');
+  maleSlot.innerHTML =
+    '<div class="bslot-t">♂ 父本（公马）</div>' +
+    (f
+      ? '<div class="bslot-n">'+f.name+'</div><div class="bslot-s">'+
+        '力量 '+(f.genes.muscle|0)+'　耐力 '+(f.genes.stamina|0)+'　平衡 '+(f.genes.balance|0)+'</div>'
+      : '<div class="bslot-n" style="color:#6f8579;font-size:14px">点击下方公马选择</div>');
+
+  femaleSlot.className = 'bslot' + (m ? ' filled' : '');
+  femaleSlot.innerHTML =
+    '<div class="bslot-t">♀ 母本（母马）</div>' +
+    (m
+      ? '<div class="bslot-n">'+m.name+'</div><div class="bslot-s">'+
+        '力量 '+(m.genes.muscle|0)+'　耐力 '+(m.genes.stamina|0)+'　平衡 '+(m.genes.balance|0)+'</div>'
+      : '<div class="bslot-n" style="color:#6f8579;font-size:14px">点击下方母马选择</div>');
+
+  if (!G.stable.length){
+    grid.innerHTML = '<div class="empty"><div class="big">🧬</div>' +
+      '还没有马可以繁育<br>先去原野套几匹马回来吧</div>';
+    return;
+  }
+
+  const list = G.stable.slice().sort(function(a,b){ return horsePower(b) - horsePower(a); });
+
+  for (let i=0;i<list.length;i++){
+    (function(h){
+      const card = document.createElement('div');
+      card.className = 'hcard pickcard';
+      if (G.breed.father === h || G.breed.mother === h) card.classList.add('sel');
+
+      const kindTag = h.kind !== 'horse'
+        ? '<span class="ktag">'+KIND_LABEL[h.kind]+' 彩蛋</span>' : '';
+      const genTag2 = h.gender
+        ? '<span class="gtag '+(h.gender==='male'?'male':'female')+'">'+GENDER_LABEL[h.gender]+'</span>' : '';
+      const genTag = h.generation > 1
+        ? '<span class="gtag gen">第'+h.generation+'代</span>' : '';
+
+      card.innerHTML =
+        '<div class="hcard-top">' +
+          '<canvas></canvas>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="hname"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+
+              h.name+'</span>'+genTag2+kindTag+genTag+'</div>' +
+            '<div class="gene">' +
+              '力 '+(h.genes.muscle|0)+'　耐 '+(h.genes.stamina|0)+
+              '　平 '+(h.genes.balance|0)+'　运 '+(h.genes.luck|0)+'<br>' +
+              '身 '+h.genes.height.toFixed(2)+'　腿 '+h.genes.legLength.toFixed(2)+
+              '　重 '+h.genes.weight+'kg' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      grid.appendChild(card);
+      renderHorseThumb(card.querySelector('canvas'), h);
+
+      card.onclick = function(){
+        // 彩蛋 / 非马匹不允许繁育
+        if (h.kind !== 'horse'){
+          toast('🚫 彩蛋生物不能参与繁育', 1600);
+          return;
+        }
+        if (h.gender === 'male'){
+          if (G.breed.mother === h) G.breed.mother = null;
+          G.breed.father = (G.breed.father === h) ? null : h;
+        } else {
+          if (G.breed.father === h) G.breed.father = null;
+          G.breed.mother = (G.breed.mother === h) ? null : h;
+        }
+        renderBreed();
+      };
+    })(list[i]);
+  }
+}
+
+function doBreed(){
+  const f = G.breed.father, m = G.breed.mother;
+  if (!f || !m){ toast('🧬 请先选择一公一母', 1600); return; }
+  if (G.herbCount <= 0){ toast('🌿 没有育马灵草了！去商店买吧', 1800); return; }
+  if (f === m){ toast('🧬 同一匹马不能自交哦', 1600); return; }
+
+  G.herbCount--;
+  const child = breedHorses(f, m);
+  G.stable.push(child);
+  updateHUD();
+  renderBreed();
+  toast('🎉 「'+f.name+'」×「'+m.name+'」→「'+child.name+'」诞生！', 2400);
+}
+
+/* ============================== 商店 ============================== */
+const SHOP_ITEMS = [
+  {
+    id:'lasso', ico:'🪢', name:'套索', price:100,
+    desc:'捕获野马必备工具。每扔一次消耗 1 个。'
+  },
+  {
+    id:'lasso10', ico:'🪢', name:'套索 ×10 优惠装', price:900,
+    desc:'一次买 10 个套索，省 100 金币。'
+  },
+  {
+    id:'herb', ico:'🌿', name:'育马灵草', price:300,
+    desc:'育马场使用，每次繁育消耗 1 株。'
+  },
+  {
+    id:'t_muscle', ico:'💪', name:'肌肉强化剂', price:220,
+    desc:'对目标马匹使用，肌肉 +3～8。'
+  },
+  {
+    id:'t_stamina', ico:'🫀', name:'耐力药剂', price:220,
+    desc:'对目标马匹使用，耐力 +3～8。'
+  },
+  {
+    id:'t_balance', ico:'⚖️', name:'平衡特训课', price:260,
+    desc:'对目标马匹使用，平衡 +3～8。'
+  },
+  {
+    id:'t_luck', ico:'🍀', name:'四叶草护符', price:300,
+    desc:'对目标马匹使用，幸运 +3～8。'
+  },
+  {
+    id:'t_height', ico:'📏', name:'长高钙片', price:280,
+    desc:'对目标马匹使用，身高 +0.05～0.15。'
+  },
+  {
+    id:'t_leg', ico:'🦵', name:'拉腿瑜伽课', price:280,
+    desc:'对目标马匹使用，腿长 +0.05～0.15。'
+  },
+  {
+    id:'t_weight', ico:'⚖️', name:'减脂操', price:200,
+    desc:'对目标马匹使用，体重降低 5～20kg（越快越灵活）。'
+  },
+  {
+    id:'t_young', ico:'⏳', name:'青春之水', price:600,
+    desc:'对目标马匹使用，年龄 -1（最低 1 岁）。'
+  }
+];
+
+function renderShop(){
+  const list = document.getElementById('shopList');
+  const sel = document.getElementById('trainTarget');
+  document.getElementById('shopCoins').textContent = '🪙 ' + G.coins;
+
+  /* 训练目标下拉 */
+  const prevVal = G.shopTargetUid;
+  sel.innerHTML = '';
+  if (!G.stable.length){
+    const o = document.createElement('option');
+    o.value = ''; o.textContent = '（马厩为空）';
+    sel.appendChild(o);
+  } else {
+    for (let i=0;i<G.stable.length;i++){
+      const h = G.stable[i];
+      const o = document.createElement('option');
+      o.value = h.uid;
+      o.textContent = h.name + ' · ' + GENDER_LABEL[h.gender];
+      if (G.shopTargetUid === h.uid) o.selected = true;
+      sel.appendChild(o);
+    }
+    if (!G.shopTargetUid || !G.stable.find(function(x){ return x.uid === G.shopTargetUid; })){
+      G.shopTargetUid = G.stable[0].uid;
+      sel.value = G.shopTargetUid;
+    }
+  }
+
+  /* 商品列表 */
+  list.innerHTML = '';
+  for (let i=0;i<SHOP_ITEMS.length;i++){
+    (function(it){
+      const div = document.createElement('div');
+      div.className = 'shop-item';
+      const needTarget = it.id.indexOf('t_') === 0;
+      const afford = G.coins >= it.price;
+      div.innerHTML =
+        '<div class="ico">'+it.ico+'</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="nm">'+it.name+'<span class="own">🪙 '+it.price+'</span></div>' +
+          '<div class="ds">'+it.desc+'</div>' +
+        '</div>' +
+        '<button class="btn small'+(afford?'':' ghost')+'" '+(afford?'':'disabled')+'>购买</button>';
+      const btn = div.querySelector('button');
+      btn.onclick = function(){ buyItem(it, needTarget); };
+      list.appendChild(div);
+    })(SHOP_ITEMS[i]);
+  }
+}
+
+function buyItem(it, needTarget){
+  if (G.coins < it.price){ toast('🪙 金币不够啦', 1500); return; }
+
+  if (needTarget){
+    if (!G.stable.length){ toast('🎯 马厩里没有可训练的马', 1600); return; }
+    const target = G.stable.find(function(x){ return x.uid === G.shopTargetUid; });
+    if (!target){ toast('🎯 请选择训练目标', 1500); return; }
+
+    G.coins -= it.price;
+    let msg = '';
+    if (it.id === 't_muscle'){ target.genes.muscle = clamp(target.genes.muscle + rndi(3,8), 5, 100); msg = '肌肉 +'; }
+    else if (it.id === 't_stamina'){ target.genes.stamina = clamp(target.genes.stamina + rndi(3,8), 5, 100); msg = '耐力 +'; }
+    else if (it.id === 't_balance'){ target.genes.balance = clamp(target.genes.balance + rndi(3,8), 5, 100); msg = '平衡 +'; }
+    else if (it.id === 't_luck'){ target.genes.luck = clamp(target.genes.luck + rndi(3,8), 5, 100); msg = '幸运 +'; }
+    else if (it.id === 't_height'){ target.genes.height = +clamp(target.genes.height + rnd(0.05,0.15), 0.35, 3.4).toFixed(2); msg = '身高 +'; }
+    else if (it.id === 't_leg'){ target.genes.legLength = +clamp(target.genes.legLength + rnd(0.05,0.15), 0.12, 2.6).toFixed(2); msg = '腿长 +'; }
+    else if (it.id === 't_weight'){ const d = rndi(5,20); target.genes.weight = Math.max(60, target.genes.weight - d); msg = '体重 -'+d+'kg'; }
+    else if (it.id === 't_young'){ if (target.age > 1){ target.age--; msg = '年龄 -1'; } else { msg = '年龄已最低'; } }
+
+    updateHUD();
+    renderShop();
+    toast('✅ 「'+target.name+'」 '+msg, 1800);
+    return;
+  }
+
+  /* 消耗品 */
+  G.coins -= it.price;
+  if (it.id === 'lasso'){ G.lassoCount += 1; toast('🪢 套索 ×1（共 '+G.lassoCount+'）', 1500); }
+  else if (it.id === 'lasso10'){ G.lassoCount += 10; toast('🪢 套索 ×10（共 '+G.lassoCount+'）', 1700); }
+  else if (it.id === 'herb'){ G.herbCount += 1; toast('🌿 育马灵草 ×1（共 '+G.herbCount+'）', 1500); }
+  updateHUD();
+  renderShop();
+}
+
+/* ============================== 赌马场 ============================== */
+function rollBetList(){
+  const list = [];
+  for (let i=0;i<4;i++) list.push(makeHorse('horse'));
+  G.bet.list = list;
+  G.bet.sel = -1;
+  renderBet();
+}
+
+function renderBet(){
+  const wrap = document.getElementById('betList');
+  const sub = document.getElementById('betSub');
+  wrap.innerHTML = '';
+
+  if (!G.bet.list.length) rollBetList();
+
+  const odds = G.bet.list.map(function(h){
+    const p = horsePower(h);
+    return Math.max(1.15, (260 / (p + 120)) * rnd(0.85, 1.15));
+  });
+  G.bet.odds = odds;
+
+  for (let i=0;i<G.bet.list.length;i++){
+    (function(h, idx){
+      const card = document.createElement('div');
+      card.className = 'betcard' + (G.bet.sel === idx ? ' sel' : '');
+      const bal = balanceLabel(effGenes(h).balance);
+      card.innerHTML =
+        '<div class="bo">×'+odds[idx].toFixed(2)+'</div>' +
+        '<canvas></canvas>' +
+        '<div class="bn">'+h.name+'</div>' +
+        '<div class="bs">' +
+          '力 <b>'+(h.genes.muscle|0)+'</b>　耐 <b>'+(h.genes.stamina|0)+'</b><br>' +
+          '平 <b style="color:'+bal.color+'">'+bal.text+'</b>　运 <b>'+(h.genes.luck|0)+'</b><br>' +
+          '身 <b>'+h.genes.height.toFixed(2)+'</b>　腿 <b>'+h.genes.legLength.toFixed(2)+'</b>　性 <b>'+TEMPER_NAME[h.genes.temper]+'</b>' +
+        '</div>';
+      wrap.appendChild(card);
+      renderHorseThumb(card.querySelector('canvas'), h);
+      card.onclick = function(){
+        G.bet.sel = idx;
+        renderBet();
+      };
+    })(G.bet.list[i], i);
+  }
+  sub.textContent = (G.bet.sel < 0)
+    ? '选一匹马下注'
+    : '已选：'+G.bet.list[G.bet.sel].name+'　下注 '+G.bet.amount+'　赔率 ×'+odds[G.bet.sel].toFixed(2);
+}
+
+function startBetRace(){
+  if (G.bet.sel < 0){ toast('🎰 请先选择一匹马', 1600); return; }
+  if (G.coins < G.bet.amount){ toast('🪙 金币不足以支付下注', 1600); return; }
+
+  G.coins -= G.bet.amount;
+  updateHUD();
+
+  const list = G.bet.list;
+  // 自动跑：用与正式比赛同样的模拟逻辑
+  const hs = [];
+  for (let i=0;i<list.length;i++){
+    hs.push({
+      data: list[i], x: 0, v: 0, legPhase: Math.random()*10, fatigue: 0,
+      finished: false, finishTime: 0,
+      reaction: 0.15 + Math.random()*0.35,
+      noiseSeed: Math.random()*100,
+      fallen: false, fallTimer: 0, fallCount: 0,
+      _facing: 1, lane: i
+    });
+  }
+
+  // 简单的无渲染模拟，跑完后弹出结果
+  let t = 0;
+  let done = false;
+  while (t < 60 && !done){
+    t += 0.016;
+    let all = true;
+    for (let i=0;i<hs.length;i++){
+      const r = hs[i];
+      if (r.finished){ continue; }
+      all = false;
+      updateRacerVirtual(r, 0.016, t);
+    }
+    if (all) done = true;
+  }
+
+  hs.sort(function(a,b){ return (a.finishTime || 999) - (b.finishTime || 999); });
+  const win = hs[0];
+  const myHorse = list[G.bet.sel];
+  const iWin = (win.data === myHorse);
+  const odds = G.bet.odds[G.bet.sel];
+
+  let payout = 0;
+  if (iWin){
+    payout = Math.round(G.bet.amount * odds);
+    G.coins += payout;
+  }
+  updateHUD();
+
+  /* 结果展示 */
+  const body = document.getElementById('resultBody');
+  const medals = ['🥇','🥈','🥉','4️⃣'];
+  let html = '<div class="big">'+(iWin?'🎉 你押中了！':'😢 没押中')+'</div>' +
+    '<div class="sub">下注 '+G.bet.amount+(iWin?'　赔率 ×'+odds.toFixed(2)+'　获得 🪙 '+payout:'　损失 🪙 '+G.bet.amount)+'</div>' +
+    '<div class="plist">';
+  for (let i=0;i<hs.length;i++){
+    const r = hs[i];
+    const tS = r.finishTime >= 900 ? '未完赛' : r.finishTime.toFixed(2)+'s';
+    const fallTxt = r.fallCount > 0 ? '　摔倒'+r.fallCount+'次' : '';
+    const isMine = (r.data === myHorse);
+    html += '<div class="prow '+(isMine?'me':'')+'">' +
+      '<span class="place">'+(medals[i]||(i+1))+'</span>' +
+      '<span class="pn">'+r.data.name+(isMine?' (你押的)':'')+fallTxt+'</span>' +
+      '<span class="pt">'+tS+'</span></div>';
+  }
+  html += '</div>';
+  body.innerHTML = html;
+  document.getElementById('resultOverlay').classList.remove('hidden');
+  document.getElementById('btnCloseResult').dataset.fromBet = '1';
+  G.paused = true;
+  G.mode = 'betResult';
+}
+
+function updateRacerVirtual(r, dt, t){
+  if (t < r.reaction) return;
+  const g = effGenes(r.data);
+  const M = moveStyleOf(r.data.look.shape);
+
+  if (r.fallen){
+    r.fallTimer -= dt;
+    r.v *= Math.pow(0.1, dt);
+    r.x += r.v * dt;
+    if (r.fallTimer <= 0){ r.fallen = false; r.fatigue += 0.06; }
+    if (r.x >= RACE_LEN){ r.finished = true; r.finishTime = t; }
+    return;
+  }
+
+  const kindSpd = r.data.kind === 'car' ? 1.12 : (r.data.kind === 'whale' ? 0.9 : 1);
+  const fatigueFactor = 1 - 0.42 * clamp(r.fatigue, 0, 1);
+  let thrust = 0.55 * g.muscle * (0.6 + 0.8 * g.legLength) * fatigueFactor * M.speed * kindSpd;
+  if (g.temper === 'wild') thrust *= 1 + Math.sin(t*3.1 + r.noiseSeed)*0.09;
+  else if (g.temper === 'lazy') thrust *= t < 3.2 ? 0.84 : 1.05;
+  else if (g.temper === 'calm') thrust *= 1 + Math.sin(t*1.7 + r.noiseSeed)*0.02;
+  thrust *= 1 + (g.luck/100)*0.05*Math.sin(t*5 + r.noiseSeed*3);
+
+  const drag = 0.00055 * g.weight * r.v * r.v + 0.45 * r.v;
+  const a = (thrust - drag) / (g.weight * 0.03);
+  r.v = Math.max(0, r.v + a*dt);
+  r.x += r.v * dt;
+  r.legPhase += dt * (2.0 + r.v * 0.6) * M.legSpeed;
+
+  const stamFactor = 110 / (g.stamina + 40);
+  r.fatigue += dt * r.v * 0.0016 * stamFactor;
+
+  const weirdFrac = clamp(r.data.weirdness / 18, 0, 1);
+  const balanceFactor = clamp(1 - g.balance/100, 0, 1);
+  const speedFactor = clamp(r.v / 20, 0, 1.2);
+  const fallChance = (balanceFactor * 0.55 + weirdFrac * 0.30) * speedFactor * dt * 1.1;
+  if (Math.random() < fallChance && r.x < RACE_LEN - 3){
+    r.fallen = true;
+    r.fallCount++;
+    r.fallTimer = 1.2 + Math.random() * 1.6;
+  }
+
+  if (r.x >= RACE_LEN){
+    r.x = RACE_LEN;
+    r.finished = true;
+    r.finishTime = t;
+  }
+}
+
+/* ============================== 交互绑定 ============================== */
+cvs.addEventListener('pointerdown', function(){
+  if (G.paused) return;
+  if (G.mode !== 'world') return;
+  if (G.capture){
+    if (!G.capture.done) tapCapture();
+    return;
+  }
+  tryThrowLasso();
+});
+
+document.getElementById('btnStable').onclick = function(){
+  if (G.mode === 'race' || G.mode === 'betResult') return;
+  renderStable();
+  document.getElementById('stableOverlay').classList.remove('hidden');
+  G.paused = true;
+};
+document.getElementById('btnCloseStable').onclick = function(){
+  document.getElementById('stableOverlay').classList.add('hidden');
+  G.paused = false;
+};
+document.getElementById('btnCloseResult').onclick = function(){
+  document.getElementById('resultOverlay').classList.add('hidden');
+  const fromBet = document.getElementById('btnCloseResult').dataset.fromBet === '1';
+  document.getElementById('btnCloseResult').dataset.fromBet = '0';
+  if (fromBet){
+    G.bet.list = [];
+    G.bet.sel = -1;
+    G.mode = 'world';
+    G.paused = false;
+    G.race = null;
+    return;
+  }
+  G.race = null;
+  G.mode = 'world';
+  G.paused = false;
+  document.getElementById('tip').textContent =
+    'WASD / 方向键 移动　·　按住 Shift 冲刺　·　靠近目标点击甩套索';
+};
+
+/* 育马场 */
+document.getElementById('btnBreed').onclick = function(){
+  if (G.mode === 'race' || G.mode === 'betResult') return;
+  renderBreed();
+  document.getElementById('breedOverlay').classList.remove('hidden');
+  G.paused = true;
+};
+document.getElementById('btnCloseBreed').onclick = function(){
+  document.getElementById('breedOverlay').classList.add('hidden');
+  G.paused = false;
+};
+document.getElementById('btnDoBreed').onclick = doBreed;
+
+/* 商店 */
+document.getElementById('btnShop').onclick = function(){
+  if (G.mode === 'race' || G.mode === 'betResult') return;
+  renderShop();
+  document.getElementById('shopOverlay').classList.remove('hidden');
+  G.paused = true;
+};
+document.getElementById('btnCloseShop').onclick = function(){
+  document.getElementById('shopOverlay').classList.add('hidden');
+  G.paused = false;
+};
+document.getElementById('trainTarget').onchange = function(e){
+  G.shopTargetUid = parseInt(e.target.value, 10) || null;
+};
+
+/* 赌马场 */
+document.getElementById('btnBet').onclick = function(){
+  if (G.mode === 'race' || G.mode === 'betResult') return;
+  if (!G.bet.list.length) rollBetList();
+  renderBet();
+  document.getElementById('betOverlay').classList.remove('hidden');
+  G.paused = true;
+};
+document.getElementById('btnCloseBet').onclick = function(){
+  document.getElementById('betOverlay').classList.add('hidden');
+  G.paused = false;
+};
+document.getElementById('btnReroll').onclick = function(){
+  rollBetList();
+};
+document.getElementById('btnStartBet').onclick = function(){
+  startBetRace();
+  document.getElementById('betOverlay').classList.add('hidden');
+};
+
+/* 筹码 */
+(function(){
+  const chips = document.querySelectorAll('.bet-money .chip');
+  for (let i=0;i<chips.length;i++){
+    chips[i].onclick = function(){
+      for (let k=0;k<chips.length;k++) chips[k].classList.remove('on');
+      chips[i].classList.add('on');
+      G.bet.amount = parseInt(chips[i].dataset.amt, 10);
+      renderBet();
+    };
+  }
+})();
+
+/* ============================== 主循环 ============================== */
+let lastTime = performance.now();
+function loop(now){
+  let dt = (now - lastTime) / 1000;
+  lastTime = now;
+  if (dt > 0.05) dt = 0.05;
+  if (dt < 0) dt = 0;
+  world.lastDt = dt;
+
+  if (!G.paused){
+    if (G.mode === 'world'){
+      world.time += dt;
+      updatePlayer(dt);
+      for (let i=0;i<world.horses.length;i++) updateWildHorse(world.horses[i], dt);
+      updateLasso(dt);
+      updateCapture(dt);
+
+      world.respawnTimer -= dt;
+      if (world.respawnTimer <= 0){
+        world.respawnTimer = 4;
+        if (world.horses.length < 14) spawnWildHorse(false);
+      }
+    } else if (G.mode === 'race'){
+      updateRace(dt);
+    }
+  }
+
+  if (G.mode === 'race') renderRace();
+  else renderWorld();
+
+  requestAnimationFrame(loop);
+}
+
+/* ============================== 启动 ============================== */
+buildWorld();
+updateHUD();
+if (G.stable.length === 0){
+  // 送 2 匹开局马，方便立刻体验育马 / 商店 / 赌马
+  const seedA = makeHorse('horse'); seedA.gender = 'male';
+  const seedB = makeHorse('horse'); seedB.gender = 'female';
+  G.stable.push(seedA, seedB);
+  G.shopTargetUid = seedA.uid;
+  updateHUD();
+  setTimeout(function(){
+    toast('🎁 赠送开局马「'+seedA.name+'」♂ 与「'+seedB.name+'」♀，去育马场试试吧！', 3400);
+  }, 900);
+}
+toast('🐎 欢迎来到原野！小心，听说这里还有汽车和鲸鱼娘……', 3000);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
